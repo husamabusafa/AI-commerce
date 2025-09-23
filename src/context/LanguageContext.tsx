@@ -18,13 +18,29 @@ interface LanguageContextType {
 type LanguageAction = 
   | { type: 'SET_LANGUAGE'; payload: Language };
 
+// Initialize with saved language or default to Arabic
+const getInitialLanguage = (): Language => {
+  if (typeof window === 'undefined') return 'ar'; // SSR fallback
+  
+  try {
+    const saved = localStorage.getItem('lang') as Language | null;
+    if (saved && (saved === 'ar' || saved === 'en')) {
+      return saved;
+    }
+  } catch {}
+  
+  return 'ar'; // Default to Arabic
+};
+
+const initialLanguage = getInitialLanguage();
+
 const initialState: LanguageState = {
-  currentLanguage: 'ar',
-  isRTL: true,
+  currentLanguage: initialLanguage,
+  isRTL: initialLanguage === 'ar',
 };
 
 // Translation strings
-const translations = {
+const translations: Record<Language, Record<string, string>> = {
   ar: {
     // Navigation
     'nav.dashboard': 'لوحة التحكم',
@@ -88,6 +104,18 @@ const translations = {
     'filters.priceHighLow': 'السعر: عالي إلى منخفض',
     'filters.priceLowHigh': 'السعر: منخفض إلى عالي',
     'filters.results': 'نتيجة',
+    'filters.label': 'الفلاتر:',
+
+    // Price Ranges
+    'price.all': 'الكل',
+    'price.under50': '< 200 ريال',
+    'price.50to200': '200-800 ريال',
+    'price.over200': '> 800 ريال',
+
+    // Shop Empty States
+    'shop.noProductsTitle': 'لم يتم العثور على منتجات',
+    'shop.noProductsDesc': 'جرب تعديل الفلاتر أو مصطلحات البحث',
+    'shop.resetFilters': 'إعادة تعيين الفلاتر',
     
     // Testimonials
     'testimonials.title': 'آراء عملائنا',
@@ -149,6 +177,36 @@ const translations = {
     'user.profile': 'الملف الشخصي',
     'user.settings': 'الإعدادات',
     'user.logout': 'تسجيل الخروج',
+    
+    // Orders (Admin)
+    'orders.title': 'الطلبات',
+    'orders.subtitle': 'تتبع وأدر طلبات العملاء',
+    'orders.stats.total': 'إجمالي الطلبات',
+    'orders.status.pending': 'قيد الانتظار',
+    'orders.status.processing': 'معالجة',
+    'orders.status.shipped': 'تم الشحن',
+    'orders.status.delivered': 'تم التسليم',
+    'orders.status.cancelled': 'ملغي',
+    'orders.searchPlaceholder': 'بحث في الطلبات...',
+    'orders.filter.all': 'كل الحالات',
+    'orders.table.orderId': 'رقم الطلب',
+    'orders.table.customer': 'العميل',
+    'orders.table.items': 'العناصر',
+    'orders.table.total': 'الإجمالي',
+    'orders.table.status': 'الحالة',
+    'orders.table.date': 'التاريخ',
+    'orders.table.actions': 'إجراءات',
+    'orders.itemSingular': 'عنصر',
+    'orders.itemPlural': 'عناصر',
+    'orders.details.title': 'تفاصيل الطلب',
+    'orders.details.orderInfo': 'معلومات الطلب',
+    'orders.details.customerInfo': 'معلومات العميل',
+    'orders.details.name': 'الاسم',
+    'orders.details.email': 'البريد الإلكتروني',
+    'orders.details.address': 'العنوان',
+    'orders.details.items': 'عناصر الطلب',
+    'orders.details.quantity': 'الكمية',
+    'orders.details.each': 'لكل قطعة',
   },
   en: {
     // Navigation
@@ -213,6 +271,18 @@ const translations = {
     'filters.priceHighLow': 'Price: High to Low',
     'filters.priceLowHigh': 'Price: Low to High',
     'filters.results': 'results',
+    'filters.label': 'Filters:',
+
+    // Price Ranges
+    'price.all': 'All',
+    'price.under50': '< 200 SAR',
+    'price.50to200': '200-800 SAR',
+    'price.over200': '> 800 SAR',
+
+    // Shop Empty States
+    'shop.noProductsTitle': 'No products found',
+    'shop.noProductsDesc': 'Try adjusting filters or search terms',
+    'shop.resetFilters': 'Reset Filters',
     
     // Testimonials
     'testimonials.title': 'Customer Reviews',
@@ -274,6 +344,36 @@ const translations = {
     'user.profile': 'Profile',
     'user.settings': 'Settings',
     'user.logout': 'Logout',
+
+    // Orders (Admin)
+    'orders.title': 'Orders',
+    'orders.subtitle': 'Track and manage customer orders',
+    'orders.stats.total': 'Total Orders',
+    'orders.status.pending': 'Pending',
+    'orders.status.processing': 'Processing',
+    'orders.status.shipped': 'Shipped',
+    'orders.status.delivered': 'Delivered',
+    'orders.status.cancelled': 'Cancelled',
+    'orders.searchPlaceholder': 'Search orders...',
+    'orders.filter.all': 'All Status',
+    'orders.table.orderId': 'Order ID',
+    'orders.table.customer': 'Customer',
+    'orders.table.items': 'Items',
+    'orders.table.total': 'Total',
+    'orders.table.status': 'Status',
+    'orders.table.date': 'Date',
+    'orders.table.actions': 'Actions',
+    'orders.itemSingular': 'item',
+    'orders.itemPlural': 'items',
+    'orders.details.title': 'Order Details',
+    'orders.details.orderInfo': 'Order Information',
+    'orders.details.customerInfo': 'Customer Information',
+    'orders.details.name': 'Name',
+    'orders.details.email': 'Email',
+    'orders.details.address': 'Address',
+    'orders.details.items': 'Order Items',
+    'orders.details.quantity': 'Quantity',
+    'orders.details.each': 'each',
   }
 };
 
@@ -367,7 +467,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = state.currentLanguage;
     document.documentElement.dir = state.isRTL ? 'rtl' : 'ltr';
     document.body.style.direction = state.isRTL ? 'rtl' : 'ltr';
+    // Persist language
+    try {
+      localStorage.setItem('lang', state.currentLanguage);
+    } catch {}
   }, [state.currentLanguage, state.isRTL]);
+
 
   return (
     <LanguageContext.Provider value={{ state, dispatch, t, formatNumber, translateProduct }}>

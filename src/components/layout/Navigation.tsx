@@ -5,11 +5,14 @@ import Button from '../shared/Button';
 import ThemeToggle from '../shared/ThemeToggle';
 import LanguageToggle from '../shared/LanguageToggle';
 import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function Navigation() {
-  const { state, dispatch } = useApp();
+  const { state } = useApp();
   const { t, formatNumber, state: langState } = useLanguage();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   
   const adminNavItems = [
     { id: 'dashboard', label: t('nav.dashboard'), icon: BarChart3 },
@@ -26,14 +29,34 @@ export default function Navigation() {
   ];
 
   const navItems = state.currentPanel === 'admin' ? adminNavItems : clientNavItems;
-  const currentView = state.currentPanel === 'admin' ? state.adminView : state.clientView;
+  const currentPath = location.pathname;
+
+  const pathForItem = (panel: 'admin' | 'client', id: string) => {
+    if (panel === 'admin') {
+      switch (id) {
+        case 'dashboard': return '/admin';
+        case 'products': return '/admin/products';
+        case 'orders': return '/admin/orders';
+        case 'users': return '/admin/users';
+        default: return '/admin';
+      }
+    } else {
+      switch (id) {
+        case 'shop': return '/';
+        case 'cart': return '/cart';
+        case 'orders': return '/orders';
+        case 'account': return '/account';
+        default: return '/';
+      }
+    }
+  };
 
   const cartItemsCount = state.cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="fixed right-0 top-4 bottom-4 mr-4 w-72 z-40 glass rounded-3xl shadow-luxury">
+      <nav className="fixed ltr:right-0 rtl:left-0 top-4 bottom-4 ltr:mr-4 rtl:ml-4 w-72 z-40 glass rounded-3xl shadow-luxury">
         <div className="h-full overflow-y-auto p-6">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -43,10 +66,10 @@ export default function Navigation() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => dispatch({ 
-                  type: 'SET_PANEL', 
-                  payload: state.currentPanel === 'admin' ? 'client' : 'admin' 
-                })}
+                onClick={() => {
+                  const to = state.currentPanel === 'admin' ? '/' : '/admin';
+                  navigate(to);
+                }}
                 className="p-2"
               >
                 <Settings className="h-4 w-4" />
@@ -61,18 +84,13 @@ export default function Navigation() {
         <div className="space-y-2">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentView === item.id;
+            const target = pathForItem(state.currentPanel, item.id);
+            const isActive = currentPath === target || (state.currentPanel === 'admin' ? currentPath.startsWith(target) : currentPath === target);
             
             return (
               <button
                 key={item.id}
-                onClick={() => {
-                  if (state.currentPanel === 'admin') {
-                    dispatch({ type: 'SET_ADMIN_VIEW', payload: item.id as any });
-                  } else {
-                    dispatch({ type: 'SET_CLIENT_VIEW', payload: item.id as any });
-                  }
-                }}
+                onClick={() => navigate(target)}
                 className={`
                   w-full group flex items-center px-4 py-3 text-sm font-medium rounded-2xl transition-all duration-200 transition-luxury
                   ${isActive 
@@ -81,10 +99,10 @@ export default function Navigation() {
                   }
                 `}
               >
-                <Icon className="h-5 w-5 ml-3 flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200" />
+                <Icon className="h-5 w-5 ltr:ml-3 rtl:mr-3 flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200" />
                 <span className="arabic-text">{item.label}</span>
                             {item.id === 'cart' && cartItemsCount > 0 && (
-                              <span className="mr-auto bg-luxury-gold-secondary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                              <span className="ltr:mr-auto rtl:ml-auto bg-luxury-gold-secondary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                                 {formatNumber(cartItemsCount)}
                               </span>
                             )}
@@ -120,7 +138,7 @@ export default function Navigation() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsMobileMenuOpen(true)}
-          className="fixed top-4 right-4 z-50 p-3 bg-luxury-gold-primary text-white rounded-2xl shadow-luxury hover:bg-luxury-gold-secondary transition-colors"
+          className="fixed top-4 ltr:right-4 rtl:left-4 z-50 p-3 bg-luxury-gold-primary text-white rounded-2xl shadow-luxury hover:bg-luxury-gold-secondary transition-colors"
         >
           <Menu className="h-6 w-6" />
         </button>
@@ -131,7 +149,7 @@ export default function Navigation() {
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
             
             {/* Mobile Menu Panel */}
-            <div className="fixed right-0 top-0 bottom-0 w-80 max-w-[90vw] bg-luxury-light dark:bg-luxury-dark shadow-luxury animate-slideIn">
+            <div className="fixed ltr:right-0 rtl:left-0 top-0 bottom-0 w-80 max-w-[90vw] bg-luxury-light dark:bg-luxury-dark shadow-luxury animate-slideIn">
               <div className="h-full overflow-y-auto p-6">
             {/* Mobile Header */}
             <div className="mb-8">
@@ -148,10 +166,10 @@ export default function Navigation() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => dispatch({ 
-                      type: 'SET_PANEL', 
-                      payload: state.currentPanel === 'admin' ? 'client' : 'admin' 
-                    })}
+                    onClick={() => {
+                      const to = state.currentPanel === 'admin' ? '/' : '/admin';
+                      navigate(to);
+                    }}
                     className="p-2"
                   >
                     <Settings className="h-4 w-4" />
@@ -167,17 +185,14 @@ export default function Navigation() {
                 <div className="space-y-2">
                   {navItems.map((item) => {
                     const Icon = item.icon;
-                    const isActive = currentView === item.id;
+                    const target = pathForItem(state.currentPanel, item.id);
+                    const isActive = currentPath === target || (state.currentPanel === 'admin' ? currentPath.startsWith(target) : currentPath === target);
                     
                     return (
                       <button
                         key={item.id}
                         onClick={() => {
-                          if (state.currentPanel === 'admin') {
-                            dispatch({ type: 'SET_ADMIN_VIEW', payload: item.id as any });
-                          } else {
-                            dispatch({ type: 'SET_CLIENT_VIEW', payload: item.id as any });
-                          }
+                          navigate(target);
                           setIsMobileMenuOpen(false);
                         }}
                         className={`
@@ -188,10 +203,10 @@ export default function Navigation() {
                           }
                         `}
                       >
-                        <Icon className="h-6 w-6 ml-3 flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200" />
+                        <Icon className="h-6 w-6 ltr:ml-3 rtl:mr-3 flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200" />
                         <span className="arabic-text">{item.label}</span>
                             {item.id === 'cart' && cartItemsCount > 0 && (
-                              <span className="mr-auto bg-luxury-gold-secondary text-white text-sm rounded-full h-6 w-6 flex items-center justify-center font-medium">
+                              <span className="ltr:mr-auto rtl:ml-auto bg-luxury-gold-secondary text-white text-sm rounded-full h-6 w-6 flex items-center justify-center font-medium">
                                 {formatNumber(cartItemsCount)}
                               </span>
                             )}

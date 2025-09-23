@@ -10,8 +10,20 @@ type ThemeAction =
   | { type: 'SET_THEME'; payload: Theme }
   | { type: 'TOGGLE_THEME' };
 
+// Initialize with saved theme or system preference
+const getInitialTheme = (): Theme => {
+  if (typeof window === 'undefined') return 'light'; // SSR fallback
+  
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+    return savedTheme as Theme;
+  }
+  
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
 const initialState: ThemeState = {
-  theme: 'light'
+  theme: getInitialTheme()
 };
 
 function themeReducer(state: ThemeState, action: ThemeAction): ThemeState {
@@ -32,15 +44,6 @@ const ThemeContext = createContext<{
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(themeReducer, initialState);
-
-  useEffect(() => {
-    // Check for saved theme preference or default to system preference
-    const savedTheme = localStorage.getItem('theme') as Theme;
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const initialTheme = savedTheme || systemTheme;
-    
-    dispatch({ type: 'SET_THEME', payload: initialTheme });
-  }, []);
 
   useEffect(() => {
     // Apply theme to document and save to localStorage

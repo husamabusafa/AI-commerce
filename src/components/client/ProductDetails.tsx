@@ -4,13 +4,16 @@ import { useApp } from '../../context/AppContext';
 import Button from '../shared/Button';
 import Card from '../shared/Card';
 import Badge from '../shared/Badge';
+import { useNavigate, useParams } from 'react-router-dom';
 
 export default function ProductDetails() {
   const { state, dispatch } = useApp();
+  const navigate = useNavigate();
+  const { id } = useParams();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  const product = state.selectedProduct;
+  const product = state.selectedProduct || state.products.find(p => p.id === id) || null;
 
   if (!product) {
     return (
@@ -18,9 +21,7 @@ export default function ProductDetails() {
         <Card className="text-center py-12">
           <h2 className="text-lg font-medium text-slate-900 mb-2">Product not found</h2>
           <p className="text-slate-600 mb-4">The product you're looking for doesn't exist.</p>
-          <Button onClick={() => dispatch({ type: 'SET_CLIENT_VIEW', payload: 'shop' })}>
-            Back to Shop
-          </Button>
+          <Button onClick={() => navigate('/')}>Back to Shop</Button>
         </Card>
       </div>
     );
@@ -33,8 +34,7 @@ export default function ProductDetails() {
   };
 
   const goBack = () => {
-    dispatch({ type: 'SET_CLIENT_VIEW', payload: 'shop' });
-    dispatch({ type: 'SET_SELECTED_PRODUCT', payload: null });
+    navigate(-1);
   };
 
   // Mock additional images for demo

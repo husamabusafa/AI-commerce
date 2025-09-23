@@ -3,11 +3,13 @@ import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
 import Button from '../shared/Button';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Topbar() {
   const { state, dispatch } = useApp();
   const { t, formatNumber, state: langState } = useLanguage();
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const navigate = useNavigate();
 
   const title = state.currentPanel === 'admin' ? t('nav.adminPanel') : t('nav.store');
   const subtitle = state.currentPanel === 'admin' ? state.adminView : state.clientView;
@@ -132,11 +134,11 @@ export default function Topbar() {
               variant="ghost" 
               size="sm" 
               className="p-2 sm:p-3 relative hover:bg-luxury-gray-100 dark:hover:bg-luxury-gray-700"
-              onClick={() => dispatch({ type: 'SET_CLIENT_VIEW', payload: 'cart' })}
+              onClick={() => navigate('/cart')}
             >
               <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-luxury-gray-600 dark:text-luxury-gray-400" />
               {cartItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 sm:h-5 min-w-[16px] sm:min-w-[20px] px-1 rounded-full bg-luxury-gold-primary text-white text-xs font-medium flex items-center justify-center">
+                <span className="absolute -top-1 ltr:-right-1 rtl:-left-1 h-4 sm:h-5 min-w-[16px] sm:min-w-[20px] px-1 rounded-full bg-luxury-gold-primary text-white text-xs font-medium flex items-center justify-center">
                   {formatNumber(cartItemsCount)}
                 </span>
               )}

@@ -7,12 +7,14 @@ import Card from '../shared/Card';
 import Button from '../shared/Button';
 import Badge from '../shared/Badge';
 import Testimonials from '../shared/Testimonials';
+import { useNavigate } from 'react-router-dom';
 
 export default function Shop() {
   const { state, dispatch } = useApp();
   const { t, translateProduct } = useLanguage();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [priceRange, setPriceRange] = useState<'all' | 'under50' | '50to200' | 'over200'>('all');
+  const navigate = useNavigate();
 
   const categories = [t('category.all'), ...Array.from(new Set(state.products.map(p => translateProduct(p).category)))];
 
@@ -39,7 +41,7 @@ export default function Shop() {
 
   const viewProduct = (product: Product) => {
     dispatch({ type: 'SET_SELECTED_PRODUCT', payload: product });
-    dispatch({ type: 'SET_CLIENT_VIEW', payload: 'product' });
+    navigate(`/product/${product.id}`);
   };
 
   return (
@@ -110,7 +112,7 @@ export default function Shop() {
       <div className="space-y-4 sm:space-y-6">
         {/* Filter Chips */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <span className="text-xs sm:text-sm font-medium text-luxury-text-light dark:text-luxury-text-dark mb-2 sm:mb-0 w-full sm:w-auto">الفلاتر:</span>
+          <span className="text-xs sm:text-sm font-medium text-luxury-text-light dark:text-luxury-text-dark mb-2 sm:mb-0 w-full sm:w-auto">{t('filters.label')}</span>
           
           {/* Category Chips */}
           {categories.slice(0, 4).map((category) => (
@@ -129,10 +131,10 @@ export default function Shop() {
           
           {/* Price Range Chips - Show fewer on mobile */}
           {[
-            { value: 'all', label: 'الكل' },
-            { value: 'under50', label: '< 200 ريال' },
-            { value: '50to200', label: '200-800 ريال' },
-            { value: 'over200', label: '> 800 ريال' }
+            { value: 'all', label: t('price.all') },
+            { value: 'under50', label: t('price.under50') },
+            { value: '50to200', label: t('price.50to200') },
+            { value: 'over200', label: t('price.over200') }
           ].map((option) => (
             <button
               key={option.value}
@@ -163,11 +165,11 @@ export default function Shop() {
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               {/* Sort Dropdown */}
               <select className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-xl sm:rounded-2xl border border-luxury-gray-200 dark:border-luxury-gray-600 bg-white dark:bg-luxury-gray-800 text-luxury-text-light dark:text-luxury-text-dark text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-luxury-gold-primary/50">
-                <option>الأحدث</option>
-                <option>الأكثر مبيعاً</option>
-                <option>السعر: أقل للأعلى</option>
-                <option>السعر: أعلى للأقل</option>
-                <option>التقييم</option>
+                <option>{t('filters.newest')}</option>
+                <option>{t('filters.bestSelling')}</option>
+                <option>{t('filters.priceLowHigh')}</option>
+                <option>{t('filters.priceHighLow')}</option>
+                <option>{t('product.rating')}</option>
               </select>
               
               {/* View Toggle */}
@@ -206,10 +208,10 @@ export default function Shop() {
           <Card className="text-center py-16 animate-fadeIn">
             <Search className="h-16 w-16 text-luxury-gray-400 dark:text-luxury-gray-500 mx-auto mb-6" />
             <h3 className="arabic-heading text-xl font-semibold text-luxury-text-light dark:text-luxury-text-dark mb-3">
-              لم يتم العثور على منتجات
+              {t('shop.noProductsTitle')}
             </h3>
             <p className="arabic-text text-luxury-gray-600 dark:text-luxury-gray-400 mb-6">
-              جرب تعديل الفلاتر أو مصطلحات البحث
+              {t('shop.noProductsDesc')}
             </p>
             <button 
               onClick={() => {
@@ -219,12 +221,12 @@ export default function Shop() {
               }}
               className="btn-primary"
             >
-              إعادة تعيين الفلاتر
+              {t('shop.resetFilters')}
             </button>
           </Card>
         ) : (
           <div className={viewMode === 'grid' 
-            ? 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 animate-fadeIn'
+            ? 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 animate-fadeIn'
             : 'space-y-3 sm:space-y-4'
           }>
             {filteredProducts.map((product, index) => (
@@ -285,7 +287,7 @@ function ProductCard({ product, onAddToCart, onViewProduct, listView, compact, i
               onClick={() => onViewProduct(product)}
             />
             {product.featured && (
-              <div className="absolute top-1 sm:top-2 left-1 sm:left-2">
+              <div className="absolute top-1 sm:top-2 ltr:left-1 rtl:right-1 sm:ltr:left-2 sm:rtl:right-2">
                 <span className="bg-luxury-gold-primary text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-medium">
                   {t('product.new')}
                 </span>
@@ -343,9 +345,9 @@ function ProductCard({ product, onAddToCart, onViewProduct, listView, compact, i
               disabled={product.stock === 0}
               className="btn-primary text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2"
             >
-              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
-              <span className="hidden sm:inline">أضف للسلة</span>
-              <span className="sm:hidden">أضف</span>
+              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 ltr:ml-1 rtl:mr-1 sm:ltr:ml-2 sm:rtl:mr-2" />
+              <span className="hidden sm:inline">{t('product.addToCart')}</span>
+              <span className="sm:hidden">{t('common.add')}</span>
             </Button>
             <Button variant="ghost" size="sm" className="btn-secondary p-1.5 sm:p-2">
               <Heart className="h-3 w-3 sm:h-4 sm:w-4 text-luxury-gray-600 dark:text-luxury-gray-300" />
@@ -377,7 +379,7 @@ function ProductCard({ product, onAddToCart, onViewProduct, listView, compact, i
         <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex flex-col gap-1 sm:gap-2">
           {product.featured && (
             <span className="bg-luxury-gold-primary text-white text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full font-medium">
-              جديد
+              {t('product.new')}
             </span>
           )}
           <button className="p-1.5 sm:p-2 rounded-full bg-white/90 dark:bg-white/10 backdrop-blur shadow-soft hover:scale-110 transition-all duration-200">
@@ -392,7 +394,7 @@ function ProductCard({ product, onAddToCart, onViewProduct, listView, compact, i
           className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 right-2 sm:right-3 rounded-xl sm:rounded-2xl bg-white/90 dark:bg-white/10 backdrop-blur text-luxury-text-light dark:text-luxury-text-dark px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 disabled:opacity-50 hidden sm:block"
         >
           <span className="inline-flex items-center justify-center">
-            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
+            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 ltr:ml-1 rtl:mr-1 sm:ltr:ml-2 sm:rtl:mr-2" />
                         {product.stock === 0 ? t('product.outOfStock') : t('product.addToCart')}
           </span>
         </button>
@@ -446,8 +448,8 @@ function ProductCard({ product, onAddToCart, onViewProduct, listView, compact, i
           onClick={() => onAddToCart(product)}
           disabled={product.stock === 0}
         >
-          <ShoppingCart className="h-3 w-3 ml-1" />
-          أضف
+          <ShoppingCart className="h-3 w-3 ltr:ml-1 rtl:mr-1" />
+          {t('common.add')}
         </Button>
       </div>
     </Card>
