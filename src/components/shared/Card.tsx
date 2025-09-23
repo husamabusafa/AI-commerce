@@ -22,10 +22,10 @@ export default function Card({
     lg: 'p-8'
   } as const;
 
-  const baseClasses = `relative overflow-hidden glass rounded-2xl shadow-soft ring-1 ring-white/60 dark:ring-white/10 ${paddingClasses[padding]}`;
+  const baseClasses = `relative overflow-hidden glass rounded-2xl shadow-luxury ring-1 ring-luxury-gray-200/50 dark:ring-luxury-gray-700/50 ${paddingClasses[padding]}`;
   const hoverClasses = hover 
-    ? 'cursor-pointer transition-all duration-500 transition-spring hover:-translate-y-0.5 hover:shadow-soft'
-    : 'transition-all duration-300';
+    ? 'cursor-pointer transition-all duration-200 transition-luxury hover:-translate-y-1 hover:shadow-glow'
+    : 'transition-all duration-200';
 
   return (
     <div style={style} className={`group ${baseClasses} ${hoverClasses} ${className}`}>

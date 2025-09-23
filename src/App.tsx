@@ -1,7 +1,9 @@
 import { AppProvider, useApp } from './context/AppContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Navigation from './components/layout/Navigation';
 import Topbar from './components/layout/Topbar';
+import Toast from './components/shared/Toast';
 
 // Admin Components
 import Dashboard from './components/admin/Dashboard';
@@ -47,20 +49,32 @@ function AppContent() {
   };
 
   return (
-    <div className="h-screen app-bg animate-fadeIn">
-      {/* Fixed sidebar */}
-      <Navigation />
-      {/* Content area with left padding equal to sidebar width */}
-      <div className="pl-[17rem] h-full flex flex-col">
+    <div className="min-h-screen app-bg animate-fadeIn">
+      {/* Fixed sidebar - hidden on mobile */}
+      <div className="hidden lg:block">
+        <Navigation />
+      </div>
+      
+      {/* Content area - responsive padding */}
+      <div className="lg:pr-[19rem] h-full flex flex-col">
         {/* Sticky Topbar */}
         <Topbar />
+        
         {/* Scrollable page content below topbar */}
         <main className="flex-1 overflow-y-auto animate-slideIn">
-          <div className="p-6 max-w-7xl mx-auto">
+          <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto">
             {state.currentPanel === 'admin' ? renderAdminView() : renderClientView()}
           </div>
         </main>
       </div>
+      
+      {/* Toast Notifications */}
+      <Toast
+        show={state.toast.show}
+        message={state.toast.message}
+        type={state.toast.type}
+        onClose={() => dispatch({ type: 'HIDE_TOAST' })}
+      />
     </div>
   );
 }
@@ -68,9 +82,11 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <AppProvider>
-        <AppContent />
-      </AppProvider>
+      <LanguageProvider>
+        <AppProvider>
+          <AppContent />
+        </AppProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

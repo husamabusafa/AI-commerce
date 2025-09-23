@@ -36,7 +36,7 @@ export default function Input({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         className={`
-          block w-full px-4 py-3 text-sm rounded-2xl bg-white/60 dark:bg-white/10 text-slate-900 dark:text-gray-100 placeholder-slate-400/70 dark:placeholder-gray-500/70
+          block w-full px-4 py-3 text-sm rounded-2xl bg-white/60 dark:bg-white/10 text-slate-900 dark:text-gray-100 placeholder-slate-400/70 dark:placeholder-gray-400/80
           backdrop-blur-sm ring-0 outline-none focus:ring-4 transition-all duration-300 transition-spring
           disabled:bg-slate-100/60 dark:disabled:bg-white/5 disabled:text-slate-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed
           ${error 
@@ -46,7 +46,7 @@ export default function Input({
         `}
       />
       {error && (
-        <p className="text-sm text-red-600 animate-fadeIn">{error}</p>
+        <p className="text-sm text-red-600 dark:text-red-400 animate-fadeIn">{error}</p>
       )}
     </div>
   );

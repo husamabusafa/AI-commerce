@@ -29,6 +29,7 @@ export interface Order {
 export interface User {
   id: string;
   name: string;
+  nameEn?: string;
   email: string;
   role: 'admin' | 'client';
   avatar: string;

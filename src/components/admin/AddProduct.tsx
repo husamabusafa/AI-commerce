@@ -196,7 +196,7 @@ export default function AddProduct() {
                       placeholder="Describe your product in detail..."
                     />
                     {errors.description && (
-                      <p className="text-sm text-red-600 mt-2 animate-fadeIn flex items-center">
+                      <p className="text-sm text-red-600 dark:text-red-400 mt-2 animate-fadeIn flex items-center">
                         <AlertCircle className="h-4 w-4 mr-1" />
                         {errors.description}
                       </p>

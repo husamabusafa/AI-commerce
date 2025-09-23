@@ -24,11 +24,11 @@ export default function Button({
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-full transition-all duration-300 transition-spring focus:outline-none focus:ring-4 focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 hover-lift';
   
   const variantClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-600/90 focus:ring-blue-500/40 shadow-none hover:shadow-soft dark:bg-blue-500 dark:hover:bg-blue-500/90',
-    secondary: 'bg-white/50 hover:bg-white/70 text-slate-900 shadow-none hover:shadow-soft dark:bg-white/5 dark:hover:bg-white/10 dark:text-gray-100',
-    outline: 'ring-1 ring-slate-300/60 hover:ring-slate-400/60 text-slate-700 hover:text-slate-900 bg-transparent hover:bg-black/5 dark:ring-gray-600/60 dark:hover:ring-gray-500/60 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-white/5',
-    ghost: 'bg-transparent text-slate-600 hover:text-slate-900 hover:bg-black/5 focus:ring-slate-500/30 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-white/5',
-    danger: 'bg-red-600 text-white hover:bg-red-600/90 focus:ring-red-500/40 shadow-none hover:shadow-soft dark:bg-red-500 dark:hover:bg-red-500/90'
+    primary: 'bg-luxury-gold-primary text-white hover:bg-luxury-gold-secondary focus:ring-luxury-gold-primary/40 shadow-none hover:shadow-glow transition-all duration-200',
+    secondary: 'bg-luxury-gray-100 dark:bg-luxury-gray-700 hover:bg-luxury-gray-200 dark:hover:bg-luxury-gray-600 text-luxury-text-light dark:text-luxury-text-dark shadow-none hover:shadow-soft transition-all duration-200',
+    outline: 'ring-1 ring-luxury-gray-300/60 dark:ring-luxury-gray-600/60 hover:ring-luxury-gold-primary/60 text-luxury-text-light dark:text-luxury-text-dark bg-transparent hover:bg-luxury-gray-50 dark:hover:bg-luxury-gray-800/50 focus:ring-luxury-gold-primary/30 transition-all duration-200',
+    ghost: 'bg-transparent text-luxury-gray-600 dark:text-luxury-gray-400 hover:text-luxury-text-light dark:hover:text-luxury-text-dark hover:bg-luxury-gray-100 dark:hover:bg-luxury-gray-700 focus:ring-luxury-gray-300/30 transition-all duration-200',
+    danger: 'bg-red-600 text-white hover:bg-red-600/90 focus:ring-red-500/40 shadow-none hover:shadow-soft dark:bg-red-500 dark:hover:bg-red-500/90 transition-all duration-200'
   };
   
   const sizeClasses = {

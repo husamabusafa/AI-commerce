@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import { Search, Grid, List, Star, ShoppingCart, Heart } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Product } from '../../types';
 import Card from '../shared/Card';
 import Button from '../shared/Button';
-import Input from '../shared/Input';
 import Badge from '../shared/Badge';
+import Testimonials from '../shared/Testimonials';
 
 export default function Shop() {
   const { state, dispatch } = useApp();
+  const { t, translateProduct } = useLanguage();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [priceRange, setPriceRange] = useState<'all' | 'under50' | '50to200' | 'over200'>('all');
 
-  const categories = ['All', ...Array.from(new Set(state.products.map(p => p.category)))];
+  const categories = [t('category.all'), ...Array.from(new Set(state.products.map(p => translateProduct(p).category)))];
 
   const filteredProducts = state.products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
@@ -41,41 +43,46 @@ export default function Shop() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-amber-500 to-rose-400 dark:from-blue-700 dark:to-purple-700 rounded-2xl p-8 text-white">
-        {/* Decorative shapes */}
-        <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+    <div className="space-y-4 sm:space-y-6">
+      {/* Hero Section - Simplified Luxury Design */}
+      <div className="relative overflow-hidden bg-luxury-light dark:bg-luxury-dark rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 text-center">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 opacity-5 dark:opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }} />
+        </div>
 
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-2">Discover Amazing Products</h1>
-          <p className="text-white/80 dark:text-blue-200 mb-6">Find everything you need from our curated collection</p>
+        <div className="relative z-10 max-w-4xl mx-auto">
+          <h1 className="arabic-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 text-luxury-text-light dark:text-luxury-text-dark">
+            {t('hero.title')}
+          </h1>
+          <p className="arabic-text text-base sm:text-lg text-luxury-gray-600 dark:text-luxury-gray-400 mb-6 sm:mb-8 max-w-2xl mx-auto">
+            {t('hero.subtitle')}
+          </p>
 
-          <div className="max-w-2xl space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 h-5 w-5" />
-              <Input
-                placeholder="Search products..."
-                value={state.searchQuery}
-                onChange={(value) => dispatch({ type: 'SET_SEARCH_QUERY', payload: value })}
-                className="pl-10 bg-white/20 dark:bg-white/10 text-white placeholder-white/70"
-              />
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <button className="btn-primary text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 hover-lift w-full sm:w-auto">
+              {t('hero.cta')}
+            </button>
+            <button className="btn-secondary text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 hover-lift w-full sm:w-auto">
+              {t('common.browse')}
+            </button>
+          </div>
+
+          {/* Benefits Bar */}
+          <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-luxury-gray-500 dark:text-luxury-gray-400">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-luxury-gold-primary rounded-full"></div>
+              <span>{t('benefits.freeShipping')}</span>
             </div>
-
-            <div className="flex items-center gap-3">
-              <Button className="rounded-full bg-white text-slate-900 hover:bg-white/90">
-                Shop now
-              </Button>
-              <Button variant="ghost" className="rounded-full ring-1 ring-white/60 text-white hover:bg-white/10">
-                Explore categories
-              </Button>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-luxury-gold-primary rounded-full"></div>
+              <span>{t('benefits.returns')}</span>
             </div>
-
-            <div className="flex flex-wrap items-center gap-2 pt-2">
-              <span className="text-xs md:text-sm rounded-full px-3 py-1 bg-white/15 ring-1 ring-white/30">Free shipping over $50</span>
-              <span className="text-xs md:text-sm rounded-full px-3 py-1 bg-white/15 ring-1 ring-white/30">Secure checkout</span>
-              <span className="text-xs md:text-sm rounded-full px-3 py-1 bg-white/15 ring-1 ring-white/30">24/7 support</span>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-luxury-gold-primary rounded-full"></div>
+              <span>{t('benefits.support')}</span>
             </div>
           </div>
         </div>
@@ -84,8 +91,8 @@ export default function Shop() {
       {/* Featured Products */}
       {featuredProducts.length > 0 && (
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-gray-100 mb-4">Featured Products</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <h2 className="arabic-heading text-lg sm:text-xl font-bold text-luxury-text-light dark:text-luxury-text-dark mb-3 sm:mb-4">{t('featured.title')}</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {featuredProducts.slice(0, 4).map((product) => (
               <ProductCard
                 key={product.id}
@@ -99,107 +106,143 @@ export default function Shop() {
         </div>
       )}
 
-      {/* Filters and View Controls */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Sidebar Filters */}
-        <div className="w-full lg:w-64 space-y-6">
-          <Card>
-            <h3 className="font-semibold text-slate-900 dark:text-gray-100 mb-4">Categories</h3>
-            <div className="space-y-2">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => dispatch({ type: 'SET_SELECTED_CATEGORY', payload: category })}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                    state.selectedCategory === category
-                      ? 'bg-blue-100 dark:bg-gray-800 text-blue-700 dark:text-blue-400 font-medium'
-                      : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-900'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </Card>
-
-          <Card>
-            <h3 className="font-semibold text-slate-900 dark:text-gray-100 mb-4">Price Range</h3>
-            <div className="space-y-2">
-              {[
-                { value: 'all', label: 'All Prices' },
-                { value: 'under50', label: 'Under $50' },
-                { value: '50to200', label: '$50 - $200' },
-                { value: 'over200', label: 'Over $200' }
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => setPriceRange(option.value as any)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                    priceRange === option.value
-                      ? 'bg-blue-100 dark:bg-gray-800 text-blue-700 dark:text-blue-400 font-medium'
-                      : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-900'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </Card>
+      {/* Filter Chips and Controls */}
+      <div className="space-y-4 sm:space-y-6">
+        {/* Filter Chips */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <span className="text-xs sm:text-sm font-medium text-luxury-text-light dark:text-luxury-text-dark mb-2 sm:mb-0 w-full sm:w-auto">الفلاتر:</span>
+          
+          {/* Category Chips */}
+          {categories.slice(0, 4).map((category) => (
+            <button
+              key={category}
+              onClick={() => dispatch({ type: 'SET_SELECTED_CATEGORY', payload: category })}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${
+                state.selectedCategory === category
+                  ? 'bg-luxury-gold-primary text-white shadow-glow'
+                  : 'bg-luxury-gray-100 dark:bg-luxury-gray-700 text-luxury-text-light dark:text-luxury-text-dark hover:bg-luxury-gray-200 dark:hover:bg-luxury-gray-600'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+          
+          {/* Price Range Chips - Show fewer on mobile */}
+          {[
+            { value: 'all', label: 'الكل' },
+            { value: 'under50', label: '< 200 ريال' },
+            { value: '50to200', label: '200-800 ريال' },
+            { value: 'over200', label: '> 800 ريال' }
+          ].map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setPriceRange(option.value as any)}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${
+                priceRange === option.value
+                  ? 'bg-luxury-gold-primary text-white shadow-glow'
+                  : 'bg-luxury-gray-100 dark:bg-luxury-gray-700 text-luxury-text-light dark:text-luxury-text-dark hover:bg-luxury-gray-200 dark:hover:bg-luxury-gray-600'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 space-y-4">
-          {/* Results Header */}
-          <div className="flex items-center justify-between">
+        {/* Results Header and Controls */}
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-gray-100">
-                Products {state.selectedCategory !== 'All' && `in ${state.selectedCategory}`}
+              <h2 className="arabic-heading text-lg sm:text-xl font-semibold text-luxury-text-light dark:text-luxury-text-dark mb-1">
+                المنتجات {state.selectedCategory !== 'All' && `في ${state.selectedCategory}`}
               </h2>
-              <p className="text-slate-600 dark:text-gray-400">{filteredProducts.length} products found</p>
+              <p className="arabic-text text-sm sm:text-base text-luxury-gray-600 dark:text-luxury-gray-400">
+                {filteredProducts.length} منتج متوفر
+              </p>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-blue-100 dark:bg-gray-800 text-blue-700 dark:text-blue-400' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-gray-900'}`}
-              >
-                <Grid className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-blue-100 dark:bg-gray-800 text-blue-700 dark:text-blue-400' : 'text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-gray-900'}`}
-              >
-                <List className="h-5 w-5" />
-              </button>
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              {/* Sort Dropdown */}
+              <select className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-xl sm:rounded-2xl border border-luxury-gray-200 dark:border-luxury-gray-600 bg-white dark:bg-luxury-gray-800 text-luxury-text-light dark:text-luxury-text-dark text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-luxury-gold-primary/50">
+                <option>الأحدث</option>
+                <option>الأكثر مبيعاً</option>
+                <option>السعر: أقل للأعلى</option>
+                <option>السعر: أعلى للأقل</option>
+                <option>التقييم</option>
+              </select>
+              
+              {/* View Toggle */}
+              <div className="flex items-center bg-luxury-gray-100 dark:bg-luxury-gray-700 rounded-xl sm:rounded-2xl p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all duration-200 ${
+                    viewMode === 'grid' 
+                      ? 'bg-white dark:bg-luxury-gray-600 text-luxury-gold-primary shadow-soft' 
+                      : 'text-luxury-gray-500 dark:text-luxury-gray-400 hover:text-luxury-text-light dark:hover:text-luxury-text-dark'
+                  }`}
+                >
+                  <Grid className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all duration-200 ${
+                    viewMode === 'list' 
+                      ? 'bg-white dark:bg-luxury-gray-600 text-luxury-gold-primary shadow-soft' 
+                      : 'text-luxury-gray-500 dark:text-luxury-gray-400 hover:text-luxury-text-light dark:hover:text-luxury-text-dark'
+                  }`}
+                >
+                  <List className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+              </div>
             </div>
           </div>
-
-          {/* Products Grid/List */}
-          {filteredProducts.length === 0 ? (
-            <Card className="text-center py-12 animate-fadeIn">
-              <Search className="h-12 w-12 text-slate-400 dark:text-gray-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 dark:text-gray-100 mb-2">No products found</h3>
-              <p className="text-slate-600 dark:text-gray-400">Try adjusting your filters or search terms.</p>
-            </Card>
-          ) : (
-            <div className={viewMode === 'grid' 
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn'
-              : 'space-y-4'
-            }>
-              {filteredProducts.map((product, index) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAddToCart={addToCart}
-                  onViewProduct={viewProduct}
-                  listView={viewMode === 'list'}
-                  index={index}
-                />
-              ))}
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Main Content */}
+      <div className="space-y-6">
+
+        {/* Products Grid/List */}
+        {filteredProducts.length === 0 ? (
+          <Card className="text-center py-16 animate-fadeIn">
+            <Search className="h-16 w-16 text-luxury-gray-400 dark:text-luxury-gray-500 mx-auto mb-6" />
+            <h3 className="arabic-heading text-xl font-semibold text-luxury-text-light dark:text-luxury-text-dark mb-3">
+              لم يتم العثور على منتجات
+            </h3>
+            <p className="arabic-text text-luxury-gray-600 dark:text-luxury-gray-400 mb-6">
+              جرب تعديل الفلاتر أو مصطلحات البحث
+            </p>
+            <button 
+              onClick={() => {
+                dispatch({ type: 'SET_SEARCH_QUERY', payload: '' });
+                dispatch({ type: 'SET_SELECTED_CATEGORY', payload: 'All' });
+                setPriceRange('all');
+              }}
+              className="btn-primary"
+            >
+              إعادة تعيين الفلاتر
+            </button>
+          </Card>
+        ) : (
+          <div className={viewMode === 'grid' 
+            ? 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 animate-fadeIn'
+            : 'space-y-3 sm:space-y-4'
+          }>
+            {filteredProducts.map((product, index) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={addToCart}
+                onViewProduct={viewProduct}
+                listView={viewMode === 'list'}
+                index={index}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Testimonials Section */}
+      <Testimonials />
     </div>
   );
 }
@@ -214,54 +257,98 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, onAddToCart, onViewProduct, listView, compact, index = 0 }: ProductCardProps) {
+  const { t, translateProduct, formatNumber } = useLanguage();
+  const translatedProduct = translateProduct(product);
+  
+  // Format price in SAR without decimals
+  const formatPrice = (price: number) => {
+    return `${formatNumber(Math.round(price * 3.75))} ${t('currency.sar')}`;
+  };
+
+  // Generate random rating for demo
+  const rating = Math.random() * 2 + 3; // 3-5 stars
+  const reviewCount = Math.floor(Math.random() * 100) + 10;
+
   if (listView) {
     return (
       <Card 
         hover 
-        className="p-4 animate-fadeInUp" 
+        className="p-3 sm:p-4 md:p-6 animate-fadeIn" 
         style={{ animationDelay: `${index * 60}ms` }}
       >
-        <div className="flex items-center space-x-4">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-20 h-20 rounded-lg object-cover cursor-pointer transition-transform duration-500 group-hover:scale-105"
-            onClick={() => onViewProduct(product)}
-          />
+        <div className="flex items-center space-x-3 sm:space-x-4 md:space-x-6 space-x-reverse">
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden">
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-full h-full object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
+              onClick={() => onViewProduct(product)}
+            />
+            {product.featured && (
+              <div className="absolute top-1 sm:top-2 left-1 sm:left-2">
+                <span className="bg-luxury-gold-primary text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-medium">
+                  {t('product.new')}
+                </span>
+              </div>
+            )}
+          </div>
+          
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 
-                  className="font-semibold text-slate-900 dark:text-gray-100 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  onClick={() => onViewProduct(product)}
-                >
-                  {product.name}
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-gray-400 mt-1 line-clamp-2">{product.description}</p>
-                <div className="flex items-center space-x-2 mt-2">
-                  <Badge variant="secondary" size="sm">{product.category}</Badge>
-                  {product.featured && <Badge variant="primary" size="sm">Featured</Badge>}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+              <div className="flex-1">
+            <h3 
+              className="arabic-heading text-sm sm:text-base md:text-lg font-semibold text-luxury-text-light dark:text-luxury-text-dark cursor-pointer hover:text-luxury-gold-primary transition-colors mb-1 sm:mb-2 line-clamp-2"
+              onClick={() => onViewProduct(product)}
+            >
+              {translatedProduct.name}
+            </h3>
+            <p className="arabic-text text-xs sm:text-sm text-luxury-gray-600 dark:text-luxury-gray-400 mb-2 sm:mb-3 line-clamp-2 hidden sm:block">{translatedProduct.description}</p>
+                
+                {/* Star Rating */}
+                <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Star 
+                        key={i} 
+                        className={`h-3 w-3 sm:h-4 sm:w-4 ${i < Math.floor(rating) ? 'text-luxury-gold-primary fill-current' : 'text-luxury-gray-300'}`} 
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs sm:text-sm text-luxury-gray-500 dark:text-luxury-gray-400 hidden sm:inline">
+                    ({formatNumber(reviewCount)} {t('product.reviews')})
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Badge variant="secondary" size="sm">{translatedProduct.category}</Badge>
+                  {product.featured && <Badge variant="primary" size="sm">{t('product.featured')}</Badge>}
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-xl font-bold text-slate-900 dark:text-gray-100">${product.price}</div>
-                <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+              
+              <div className="text-left sm:text-right">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold text-luxury-text-light dark:text-luxury-text-dark mb-1 sm:mb-2">
+                  {formatPrice(product.price)}
+                </div>
+                <div className="text-xs sm:text-sm text-luxury-gray-500 dark:text-luxury-gray-400">
+                              {product.stock > 0 ? t('product.inStock') : t('product.outOfStock')}
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex flex-col space-y-2">
+          
+          <div className="flex flex-col space-y-2 sm:space-y-3 space-y-reverse">
             <Button 
               size="sm" 
               onClick={() => onAddToCart(product)}
               disabled={product.stock === 0}
+              className="btn-primary text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2"
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Add to Cart
+              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
+              <span className="hidden sm:inline">أضف للسلة</span>
+              <span className="sm:hidden">أضف</span>
             </Button>
-            <Button variant="ghost" size="sm" className="bg-white/60 dark:bg-white/10 backdrop-blur hover:bg-white/80 dark:hover:bg-white/15">
-              <Heart className="h-4 w-4 text-slate-600 dark:text-gray-300" />
+            <Button variant="ghost" size="sm" className="btn-secondary p-1.5 sm:p-2">
+              <Heart className="h-3 w-3 sm:h-4 sm:w-4 text-luxury-gray-600 dark:text-luxury-gray-300" />
             </Button>
           </div>
         </div>
@@ -272,74 +359,95 @@ function ProductCard({ product, onAddToCart, onViewProduct, listView, compact, i
   return (
     <Card 
       hover 
-      className={`p-0 overflow-hidden hover-tilt animate-fadeInUp`}
+      className={`p-0 overflow-hidden hover-lift animate-fadeIn`}
       style={{ animationDelay: `${index * 60}ms` }}
     >
-      <div className={`relative w-full ${compact ? 'h-40' : 'h-48'}`}>
+      <div className={`relative w-full ${compact ? 'h-32 sm:h-40 md:h-48' : 'h-40 sm:h-48 md:h-64'}`}>
         <img
           src={product.image}
           alt={product.name}
-          className="absolute inset-0 w-full h-full object-cover cursor-pointer transition-transform duration-500 group-hover:scale-105"
+          className="absolute inset-0 w-full h-full object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
           onClick={() => onViewProduct(product)}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        {product.featured && (
-          <div className="absolute top-2 left-2">
-            <Badge variant="primary" size="sm">
-              <Star className="h-3 w-3 mr-1 fill-current" />
-              Featured
-            </Badge>
-          </div>
-        )}
-        <button className="absolute top-2 right-2 p-2 rounded-full bg-white/80 dark:bg-white/10 backdrop-blur shadow-soft hover:scale-110 transition-all duration-200">
-          <Heart className="h-4 w-4 text-slate-700 dark:text-gray-300" />
-        </button>
-        {/* Quick add overlay */}
+        
+        {/* Overlay on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Badges */}
+        <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex flex-col gap-1 sm:gap-2">
+          {product.featured && (
+            <span className="bg-luxury-gold-primary text-white text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full font-medium">
+              جديد
+            </span>
+          )}
+          <button className="p-1.5 sm:p-2 rounded-full bg-white/90 dark:bg-white/10 backdrop-blur shadow-soft hover:scale-110 transition-all duration-200">
+            <Heart className="h-3 w-3 sm:h-4 sm:w-4 text-luxury-gray-700 dark:text-luxury-gray-300" />
+          </button>
+        </div>
+        
+        {/* Quick add button - Hidden on mobile */}
         <button
           onClick={() => onAddToCart(product)}
           disabled={product.stock === 0}
-          className="absolute bottom-3 left-3 right-3 rounded-full bg-white/80 dark:bg-white/10 backdrop-blur text-slate-900 dark:text-gray-100 px-4 py-2 text-sm font-medium opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
+          className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 right-2 sm:right-3 rounded-xl sm:rounded-2xl bg-white/90 dark:bg-white/10 backdrop-blur text-luxury-text-light dark:text-luxury-text-dark px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 disabled:opacity-50 hidden sm:block"
         >
           <span className="inline-flex items-center justify-center">
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            {product.stock === 0 ? 'Out of stock' : 'Quick add'}
+            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
+                        {product.stock === 0 ? t('product.outOfStock') : t('product.addToCart')}
           </span>
         </button>
       </div>
 
-      <div className="p-4 space-y-2">
+      <div className="p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4">
         <div>
-          <h3 
-            className={`font-semibold text-slate-900 dark:text-slate-100 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors line-clamp-2 ${
-              compact ? 'text-sm' : ''
-            }`}
-            onClick={() => onViewProduct(product)}
-          >
-            {product.name}
-          </h3>
-          {!compact && (
-            <p className="text-sm text-slate-600 dark:text-gray-400 mt-1 line-clamp-2">{product.description}</p>
-          )}
+        <h3 
+          className={`arabic-heading font-semibold text-luxury-text-light dark:text-luxury-text-dark cursor-pointer hover:text-luxury-gold-primary transition-colors line-clamp-2 mb-1 sm:mb-2 ${
+            compact ? 'text-xs sm:text-sm md:text-base' : 'text-sm sm:text-base md:text-lg'
+          }`}
+          onClick={() => onViewProduct(product)}
+        >
+          {translatedProduct.name}
+        </h3>
+        {!compact && (
+          <p className="arabic-text text-xs sm:text-sm text-luxury-gray-600 dark:text-luxury-gray-400 line-clamp-2 mb-2 sm:mb-3 hidden sm:block">{translatedProduct.description}</p>
+        )}
+        </div>
+
+        {/* Star Rating */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center">
+            {[...Array(5)].map((_, i) => (
+              <Star 
+                key={i} 
+                className={`h-3 w-3 sm:h-4 sm:w-4 ${i < Math.floor(rating) ? 'text-luxury-gold-primary fill-current' : 'text-luxury-gray-300'}`} 
+              />
+            ))}
+          </div>
+          <span className="text-xs sm:text-sm text-luxury-gray-500 dark:text-luxury-gray-400 hidden sm:inline">
+            ({formatNumber(reviewCount)})
+          </span>
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="text-xl font-bold text-slate-900 dark:text-gray-100">${product.price}</div>
-          <Badge variant="secondary" size="sm">{product.category}</Badge>
+          <div className="text-base sm:text-lg md:text-2xl font-bold text-luxury-text-light dark:text-luxury-text-dark">
+            {formatPrice(product.price)}
+          </div>
+          <Badge variant="secondary" size="sm" className="text-xs">{translatedProduct.category}</Badge>
         </div>
 
-        <div className="text-sm text-slate-600 dark:text-gray-400">
-          {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+        <div className="text-xs sm:text-sm text-luxury-gray-500 dark:text-luxury-gray-400">
+                              {product.stock > 0 ? t('product.inStock') : t('product.outOfStock')}
         </div>
 
-        {/* Fallback button for touch devices */}
+        {/* Mobile button - Always visible on mobile */}
         <Button 
-          className="w-full md:hidden mt-2" 
-          size={compact ? 'sm' : 'md'}
+          className="w-full sm:hidden mt-2" 
+          size="sm"
           onClick={() => onAddToCart(product)}
           disabled={product.stock === 0}
         >
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          Add to Cart
+          <ShoppingCart className="h-3 w-3 ml-1" />
+          أضف
         </Button>
       </div>
     </Card>

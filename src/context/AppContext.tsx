@@ -15,6 +15,11 @@ interface AppState {
   searchQuery: string;
   selectedCategory: string;
   editingProduct: Product | null;
+  toast: {
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info';
+  };
 }
 
 type AppAction =
@@ -35,12 +40,19 @@ type AppAction =
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'SET_SELECTED_CATEGORY'; payload: string }
   | { type: 'SET_CURRENT_USER'; payload: User | null }
-  | { type: 'SET_EDITING_PRODUCT'; payload: Product | null };
+  | { type: 'SET_EDITING_PRODUCT'; payload: Product | null }
+  | { type: 'SHOW_TOAST'; payload: { message: string; type: 'success' | 'error' | 'info' } }
+  | { type: 'HIDE_TOAST' };
 
 const initialState: AppState = {
   currentPanel: 'client',
   adminView: 'dashboard',
   clientView: 'shop',
+  toast: {
+    show: false,
+    message: '',
+    type: 'success'
+  },
   products: [
     {
       id: '1',
@@ -156,15 +168,25 @@ const initialState: AppState = {
       role: 'client',
       avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100',
       joinedAt: '2024-01-15'
+    },
+    {
+      id: '3',
+      name: 'أحمد محمد العلي',
+      nameEn: 'Ahmed Mohammed Al-Ali',
+      email: 'ahmed@example.com',
+      role: 'client',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&auto=format',
+      joinedAt: '2024-01-10'
     }
   ],
   currentUser: {
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@ecommerce.com',
-    role: 'admin',
-    avatar: 'https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg?auto=compress&cs=tinysrgb&w=100',
-    joinedAt: '2024-01-01'
+    id: '3',
+    name: 'أحمد محمد العلي',
+    nameEn: 'Ahmed Mohammed Al-Ali',
+    email: 'ahmed@example.com',
+    role: 'client',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&auto=format',
+    joinedAt: '2024-01-10'
   },
   selectedProduct: null,
   isLoading: false,
@@ -204,12 +226,22 @@ function appReducer(state: AppState, action: AppAction): AppState {
             item.product.id === action.payload.id
               ? { ...item, quantity: item.quantity + 1 }
               : item
-          )
+          ),
+          toast: {
+            show: true,
+            message: 'تم تحديث الكمية في السلة',
+            type: 'success'
+          }
         };
       }
       return {
         ...state,
-        cart: [...state.cart, { product: action.payload, quantity: 1 }]
+        cart: [...state.cart, { product: action.payload, quantity: 1 }],
+        toast: {
+          show: true,
+          message: 'تم إضافة المنتج إلى السلة',
+          type: 'success'
+        }
       };
     case 'REMOVE_FROM_CART':
       return {
@@ -250,6 +282,23 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, currentUser: action.payload };
     case 'SET_EDITING_PRODUCT':
       return { ...state, editingProduct: action.payload };
+    case 'SHOW_TOAST':
+      return {
+        ...state,
+        toast: {
+          show: true,
+          message: action.payload.message,
+          type: action.payload.type
+        }
+      };
+    case 'HIDE_TOAST':
+      return {
+        ...state,
+        toast: {
+          ...state.toast,
+          show: false
+        }
+      };
     default:
       return state;
   }
