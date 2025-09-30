@@ -1,0 +1,246 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input AddToCartInput {
+  productId: ID!
+  quantity: Int! = 1
+}
+
+type AuthPayload {
+  accessToken: String!
+  user: User!
+}
+
+type CartItem {
+  createdAt: DateTime!
+  id: ID!
+  product: Product!
+  productId: String!
+  quantity: Int!
+  updatedAt: DateTime!
+  user: User!
+  userId: String!
+}
+
+type Category {
+  _count: CategoryCount!
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  name: String!
+  nameAr: String
+  nameEn: String
+  updatedAt: DateTime!
+}
+
+type CategoryCount {
+  products: Int!
+}
+
+input CreateCategoryInput {
+  description: String
+  name: String!
+  nameAr: String
+  nameEn: String
+}
+
+input CreateOrderInput {
+  customerEmail: String!
+  customerName: String!
+  items: [OrderItemInput!]!
+  notes: String
+  phoneNumber: String
+  shippingAddress: String!
+}
+
+input CreateProductInput {
+  active: Boolean! = true
+  categoryId: String!
+  description: String!
+  descriptionAr: String
+  descriptionEn: String
+  featured: Boolean! = false
+  image: String!
+  images: [String!]! = []
+  name: String!
+  nameAr: String
+  nameEn: String
+  price: Float!
+  stock: Int! = 0
+}
+
+input CreateUserInput {
+  avatar: String
+  email: String!
+  name: String!
+  nameEn: String
+  password: String!
+  role: Role! = CLIENT
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  addToCart(addToCartInput: AddToCartInput!): CartItem!
+  clearCart: Boolean!
+  createCategory(createCategoryInput: CreateCategoryInput!): Category!
+  createGuestOrder(createOrderInput: CreateOrderInput!): Order!
+  createOrder(createOrderInput: CreateOrderInput!): Order!
+  createProduct(createProductInput: CreateProductInput!): Product!
+  createUser(createUserInput: CreateUserInput!): User!
+  login(loginInput: LoginInput!): AuthPayload!
+  register(registerInput: RegisterInput!): AuthPayload!
+  removeCategory(id: ID!): Category!
+  removeFromCart(cartItemId: ID!): CartItem!
+  removeProduct(id: ID!): Product!
+  removeUser(id: ID!): User!
+  updateCartItem(updateCartItemInput: UpdateCartItemInput!): CartItem!
+  updateOrderStatus(updateOrderStatusInput: UpdateOrderStatusInput!): Order!
+  updateProduct(updateProductInput: UpdateProductInput!): Product!
+  updateStock(id: ID!, quantity: Float!): Product!
+  updateUser(updateUserInput: UpdateUserInput!): User!
+}
+
+type Order {
+  createdAt: DateTime!
+  customerEmail: String!
+  customerName: String!
+  id: ID!
+  items: [OrderItem!]!
+  notes: String
+  orderNumber: String!
+  phoneNumber: String
+  shippingAddress: String!
+  status: OrderStatus!
+  total: Float!
+  updatedAt: DateTime!
+  user: User
+  userId: String
+}
+
+type OrderItem {
+  createdAt: DateTime!
+  id: ID!
+  price: Float!
+  product: Product!
+  productId: String!
+  quantity: Int!
+}
+
+input OrderItemInput {
+  productId: ID!
+  quantity: Int!
+}
+
+enum OrderStatus {
+  CANCELLED
+  DELIVERED
+  PENDING
+  PROCESSING
+  SHIPPED
+}
+
+type Product {
+  active: Boolean!
+  category: Category
+  categoryId: String
+  createdAt: DateTime!
+  description: String!
+  descriptionAr: String
+  descriptionEn: String
+  featured: Boolean!
+  id: ID!
+  image: String!
+  images: [String!]!
+  name: String!
+  nameAr: String
+  nameEn: String
+  price: Float!
+  stock: Int!
+  updatedAt: DateTime!
+}
+
+type Query {
+  cart: [CartItem!]!
+  categories: [Category!]!
+  category(id: ID!): Category!
+  me: User!
+  myOrders(status: OrderStatus): [Order!]!
+  order(id: ID!): Order!
+  orderByNumber(orderNumber: String!): Order!
+  orders(status: OrderStatus): [Order!]!
+  product(id: ID!): Product!
+  products(active: Boolean, categoryId: ID, featured: Boolean, search: String): [Product!]!
+  user(id: ID!): User!
+  users: [User!]!
+}
+
+input RegisterInput {
+  avatar: String
+  email: String!
+  name: String!
+  nameEn: String
+  password: String!
+}
+
+enum Role {
+  ADMIN
+  CLIENT
+}
+
+input UpdateCartItemInput {
+  cartItemId: ID!
+  quantity: Int!
+}
+
+input UpdateOrderStatusInput {
+  orderId: ID!
+  status: OrderStatus!
+}
+
+input UpdateProductInput {
+  active: Boolean = true
+  categoryId: String
+  description: String
+  descriptionAr: String
+  descriptionEn: String
+  featured: Boolean = false
+  id: ID!
+  image: String
+  images: [String!] = []
+  name: String
+  nameAr: String
+  nameEn: String
+  price: Float
+  stock: Int = 0
+}
+
+input UpdateUserInput {
+  avatar: String
+  email: String
+  id: ID!
+  name: String
+  nameEn: String
+  password: String
+  role: Role = CLIENT
+}
+
+type User {
+  avatar: String
+  email: String!
+  id: ID!
+  joinedAt: DateTime!
+  name: String!
+  nameEn: String
+  role: Role!
+  updatedAt: DateTime!
+}
