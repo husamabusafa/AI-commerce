@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-import { Filter, Eye, Truck, Package, CheckCircle, XCircle, Clock, X } from 'lucide-react';
+import { Search, Package, Truck, CheckCircle, XCircle, Clock, Eye, X, Calendar, User, MapPin, Phone, Mail } from 'lucide-react';
 import { useOrders } from '../../hooks/useOrders';
 import { Order } from '../../types';
-import Card from '../shared/Card';
-import Button from '../shared/Button';
-import Input from '../shared/Input';
-import Badge from '../shared/Badge';
 import { useLanguage } from '../../context/LanguageContext';
+import CustomSelect from '../shared/CustomSelect';
 
 export default function Orders() {
   const { t } = useLanguage();
@@ -14,6 +11,7 @@ export default function Orders() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const filteredOrders = (allOrders || []).filter((order: Order) => {
     const matchesSearch = 
@@ -27,7 +25,14 @@ export default function Orders() {
   });
 
   const handleUpdateOrderStatus = async (orderId: string, status: Order['status']) => {
+    setIsUpdating(true);
     await updateOrderStatus(orderId, status);
+    setIsUpdating(false);
+    
+    // Update selected order if it's the one being updated
+    if (selectedOrder && selectedOrder.id === orderId) {
+      setSelectedOrder({ ...selectedOrder, status });
+    }
   };
 
   const getStatusIcon = (status: Order['status']) => {
@@ -41,14 +46,14 @@ export default function Orders() {
     }
   };
 
-  const getStatusVariant = (status: Order['status']) => {
+  const getStatusColor = (status: Order['status']) => {
     switch (status) {
-      case 'pending': return 'warning' as const;
-      case 'processing': return 'primary' as const;
-      case 'shipped': return 'secondary' as const;
-      case 'delivered': return 'success' as const;
-      case 'cancelled': return 'danger' as const;
-      default: return 'secondary' as const;
+      case 'pending': return 'bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400';
+      case 'processing': return 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400';
+      case 'shipped': return 'bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400';
+      case 'delivered': return 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400';
+      case 'cancelled': return 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400';
+      default: return 'bg-gray-100 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400';
     }
   };
 
@@ -57,225 +62,338 @@ export default function Orders() {
     pending: (allOrders || []).filter((o: Order) => o.status === 'pending').length,
     processing: (allOrders || []).filter((o: Order) => o.status === 'processing').length,
     shipped: (allOrders || []).filter((o: Order) => o.status === 'shipped').length,
-    delivered: (allOrders || []).filter((o: Order) => o.status === 'delivered').length
+    delivered: (allOrders || []).filter((o: Order) => o.status === 'delivered').length,
+    revenue: (allOrders || []).reduce((sum: number, o: Order) => sum + o.total, 0)
   };
 
+  const statusOptions = [
+    { id: 'pending', name: t('orders.status.pending') },
+    { id: 'processing', name: t('orders.status.processing') },
+    { id: 'shipped', name: t('orders.status.shipped') },
+    { id: 'delivered', name: t('orders.status.delivered') },
+    { id: 'cancelled', name: t('orders.status.cancelled') }
+  ];
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-gray-100 mb-2">{t('orders.title')}</h1>
-        <p className="text-slate-600 dark:text-gray-400">{t('orders.subtitle')}</p>
-      </div>
+    <div className="min-h-screen bg-luxury-light dark:bg-luxury-dark p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-luxury-text-light dark:text-luxury-text-dark mb-2 arabic-heading">{t('orders.title')}</h1>
+          <p className="text-luxury-gray-600 dark:text-luxury-gray-400 arabic-text">{t('orders.subtitle')}</p>
+        </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card padding="sm" className="text-center">
-          <div className="text-2xl font-bold text-slate-900 dark:text-gray-100">{orderStats.total}</div>
-          <div className="text-sm text-slate-600 dark:text-gray-400">{t('orders.stats.total')}</div>
-        </Card>
-        <Card padding="sm" className="text-center">
-          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{orderStats.pending}</div>
-          <div className="text-sm text-slate-600 dark:text-gray-400">{t('orders.status.pending')}</div>
-        </Card>
-        <Card padding="sm" className="text-center">
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{orderStats.processing}</div>
-          <div className="text-sm text-slate-600 dark:text-gray-400">{t('orders.status.processing')}</div>
-        </Card>
-        <Card padding="sm" className="text-center">
-          <div className="text-2xl font-bold text-slate-600 dark:text-gray-400">{orderStats.shipped}</div>
-          <div className="text-sm text-slate-600 dark:text-gray-400">{t('orders.status.shipped')}</div>
-        </Card>
-        <Card padding="sm" className="text-center">
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{orderStats.delivered}</div>
-          <div className="text-sm text-slate-600 dark:text-gray-400">{t('orders.status.delivered')}</div>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              type="search"
-              placeholder={t('orders.searchPlaceholder')}
-              value={searchQuery}
-              onChange={setSearchQuery}
-            />
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="glass rounded-2xl p-4 border border-luxury-gray-200 dark:border-luxury-gray-700 hover:shadow-luxury transition-all">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-luxury-gold-primary/10 rounded-xl">
+                <Package className="h-5 w-5 text-luxury-gold-primary" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-luxury-text-light dark:text-luxury-text-dark">{orderStats.total}</div>
+            <div className="text-sm text-luxury-gray-600 dark:text-luxury-gray-400 arabic-text">{t('orders.stats.total')}</div>
           </div>
-          <div className="flex items-center space-x-4 space-x-reverse">
-            <Filter className="h-5 w-5 text-slate-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">{t('orders.filter.all')}</option>
-              <option value="pending">{t('orders.status.pending')}</option>
-              <option value="processing">{t('orders.status.processing')}</option>
-              <option value="shipped">{t('orders.status.shipped')}</option>
-              <option value="delivered">{t('orders.status.delivered')}</option>
-              <option value="cancelled">{t('orders.status.cancelled')}</option>
-            </select>
+
+          <div className="glass rounded-2xl p-4 border border-luxury-gray-200 dark:border-luxury-gray-700 hover:shadow-luxury transition-all">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-amber-100 dark:bg-amber-900/20 rounded-xl">
+                <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{orderStats.pending}</div>
+            <div className="text-sm text-luxury-gray-600 dark:text-luxury-gray-400 arabic-text">{t('orders.status.pending')}</div>
+          </div>
+
+          <div className="glass rounded-2xl p-4 border border-luxury-gray-200 dark:border-luxury-gray-700 hover:shadow-luxury transition-all">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-xl">
+                <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{orderStats.processing}</div>
+            <div className="text-sm text-luxury-gray-600 dark:text-luxury-gray-400 arabic-text">{t('orders.status.processing')}</div>
+          </div>
+
+          <div className="glass rounded-2xl p-4 border border-luxury-gray-200 dark:border-luxury-gray-700 hover:shadow-luxury transition-all">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-xl">
+                <Truck className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{orderStats.shipped}</div>
+            <div className="text-sm text-luxury-gray-600 dark:text-luxury-gray-400 arabic-text">{t('orders.status.shipped')}</div>
+          </div>
+
+          <div className="glass rounded-2xl p-4 border border-luxury-gray-200 dark:border-luxury-gray-700 hover:shadow-luxury transition-all">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-xl">
+                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{orderStats.delivered}</div>
+            <div className="text-sm text-luxury-gray-600 dark:text-luxury-gray-400 arabic-text">{t('orders.status.delivered')}</div>
+          </div>
+
+          <div className="glass rounded-2xl p-4 border border-luxury-gray-200 dark:border-luxury-gray-700 hover:shadow-luxury transition-all">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-emerald-100 dark:bg-emerald-900/20 rounded-xl">
+                <svg className="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">${orderStats.revenue.toFixed(0)}</div>
+            <div className="text-sm text-luxury-gray-600 dark:text-luxury-gray-400 arabic-text">Revenue</div>
           </div>
         </div>
-      </Card>
 
-      {/* Orders List */}
-      <Card padding="none" className="animate-slideUp">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="ltr:text-left rtl:text-right py-3 px-6 text-sm font-medium text-slate-700">{t('orders.table.orderId')}</th>
-                <th className="ltr:text-left rtl:text-right py-3 px-6 text-sm font-medium text-slate-700">{t('orders.table.customer')}</th>
-                <th className="ltr:text-left rtl:text-right py-3 px-6 text-sm font-medium text-slate-700">{t('orders.table.items')}</th>
-                <th className="ltr:text-left rtl:text-right py-3 px-6 text-sm font-medium text-slate-700">{t('orders.table.total')}</th>
-                <th className="ltr:text-left rtl:text-right py-3 px-6 text-sm font-medium text-slate-700">{t('orders.table.status')}</th>
-                <th className="ltr:text-left rtl:text-right py-3 px-6 text-sm font-medium text-slate-700">{t('orders.table.date')}</th>
-                <th className="ltr:text-left rtl:text-right py-3 px-6 text-sm font-medium text-slate-700">{t('orders.table.actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {filteredOrders.map((order: Order, index: number) => {
-                const StatusIcon = getStatusIcon(order.status);
-                return (
-                  <tr 
-                    key={order.id} 
-                    className="hover:bg-slate-50 transition-colors duration-200 animate-fadeIn"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <td className="py-4 px-6">
-                      <span className="font-medium text-slate-900 dark:text-gray-100">{order.id}</span>
-                    </td>
-                    <td className="py-4 px-6">
+        {/* Search and Filter */}
+        <div className="glass rounded-2xl p-4 border border-luxury-gray-200 dark:border-luxury-gray-700">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-luxury-gray-400" />
+              <input
+                type="search"
+                placeholder={t('orders.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-transparent text-luxury-text-light dark:text-luxury-text-dark placeholder-luxury-gray-400 focus:outline-none arabic-text"
+              />
+            </div>
+            <div className="w-full sm:w-64">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-4 py-3 bg-white dark:bg-luxury-dark border border-luxury-gray-300 dark:border-luxury-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-luxury-gold-primary text-luxury-text-light dark:text-luxury-text-dark arabic-text"
+              >
+                <option value="all">{t('orders.filter.all')}</option>
+                <option value="pending">{t('orders.status.pending')}</option>
+                <option value="processing">{t('orders.status.processing')}</option>
+                <option value="shipped">{t('orders.status.shipped')}</option>
+                <option value="delivered">{t('orders.status.delivered')}</option>
+                <option value="cancelled">{t('orders.status.cancelled')}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Orders Grid */}
+        <div className="grid grid-cols-1 gap-4">
+          {filteredOrders.length === 0 ? (
+            <div className="glass rounded-3xl p-12 text-center border border-luxury-gray-200 dark:border-luxury-gray-700">
+              <div className="p-4 bg-luxury-gray-100 dark:bg-luxury-gray-800 rounded-2xl w-fit mx-auto mb-4">
+                <Package className="h-12 w-12 text-luxury-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-luxury-text-light dark:text-luxury-text-dark mb-2 arabic-heading">No Orders Found</h3>
+              <p className="text-luxury-gray-600 dark:text-luxury-gray-400 arabic-text">
+                {searchQuery ? 'No orders match your search criteria.' : 'No orders yet.'}
+              </p>
+            </div>
+          ) : (
+            filteredOrders.map((order: Order) => {
+              const StatusIcon = getStatusIcon(order.status);
+              return (
+                <div
+                  key={order.id}
+                  className="glass rounded-2xl p-6 border border-luxury-gray-200 dark:border-luxury-gray-700 hover:shadow-luxury transition-all animate-fadeIn"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                    {/* Order Info */}
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div>
-                        <div className="font-medium text-slate-900 dark:text-gray-100">{order.customerName}</div>
-                        <div className="text-sm text-slate-500 dark:text-gray-400">{order.customerEmail}</div>
+                        <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400 mb-1 arabic-text">{t('orders.table.orderId')}</div>
+                        <div className="font-semibold text-luxury-text-light dark:text-luxury-text-dark">{order.orderNumber || order.id}</div>
                       </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="text-sm text-slate-600 dark:text-gray-400">
-                        {order.items.length} {order.items.length !== 1 ? t('orders.itemPlural') : t('orders.itemSingular')}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-medium text-slate-900 dark:text-gray-100">${order.total.toFixed(2)}</span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <Badge variant={getStatusVariant(order.status)}>
-                        <StatusIcon className="h-3 w-3 ltr:mr-1 rtl:ml-1" />
-                        {order.status}
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="text-sm text-slate-600 dark:text-gray-400">
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center space-x-2 space-x-reverse">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedOrder(order)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <select
-                          value={order.status}
-                          onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value as Order['status'])}
-                          className="text-xs border border-slate-300 rounded px-2 py-1"
-                        >
-                          <option value="pending">{t('orders.status.pending')}</option>
-                          <option value="processing">{t('orders.status.processing')}</option>
-                          <option value="shipped">{t('orders.status.shipped')}</option>
-                          <option value="delivered">{t('orders.status.delivered')}</option>
-                          <option value="cancelled">{t('orders.status.cancelled')}</option>
-                        </select>
+                      
+                      <div>
+                        <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400 mb-1 arabic-text">{t('orders.table.customer')}</div>
+                        <div className="font-medium text-luxury-text-light dark:text-luxury-text-dark">{order.customerName}</div>
+                        <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400">{order.customerEmail}</div>
                       </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      
+                      <div>
+                        <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400 mb-1 arabic-text">{t('orders.table.total')}</div>
+                        <div className="text-xl font-bold text-luxury-gold-primary">${order.total.toFixed(2)}</div>
+                        <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400">
+                          {order.items.length} {order.items.length !== 1 ? t('orders.itemPlural') : t('orders.itemSingular')}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400 mb-1 arabic-text">{t('orders.table.date')}</div>
+                        <div className="text-luxury-text-light dark:text-luxury-text-dark">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </div>
+                        <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium mt-2 ${getStatusColor(order.status)}`}>
+                          <StatusIcon className="h-4 w-4" />
+                          <span className="capitalize">{order.status}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="p-3 hover:bg-luxury-gray-100 dark:hover:bg-luxury-gray-800 rounded-xl transition-all"
+                        title="View Details"
+                      >
+                        <Eye className="h-5 w-5 text-luxury-gray-600 dark:text-luxury-gray-400" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
-      </Card>
+      </div>
 
       {/* Order Details Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scaleIn shadow-xl">
-            <div className="p-6 border-b border-slate-200 dark:border-gray-800">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="glass rounded-3xl border border-luxury-gray-200 dark:border-luxury-gray-700 max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-scaleIn shadow-luxury">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-luxury-gray-200 dark:border-luxury-gray-700">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-gray-100">{t('orders.details.title')}</h2>
-                <Button variant="ghost" onClick={() => setSelectedOrder(null)}>
-                  <X className="h-4 w-4" />
-                </Button>
+                <div>
+                  <h2 className="text-2xl font-bold text-luxury-text-light dark:text-luxury-text-dark arabic-heading">{t('orders.details.title')}</h2>
+                  <p className="text-luxury-gray-600 dark:text-luxury-gray-400 mt-1">{selectedOrder.orderNumber || selectedOrder.id}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedOrder(null)}
+                  className="p-2 hover:bg-luxury-gray-100 dark:hover:bg-luxury-gray-800 rounded-xl transition-all"
+                >
+                  <X className="h-6 w-6 text-luxury-gray-600 dark:text-luxury-gray-400" />
+                </button>
               </div>
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Order Info */}
-              <div className="grid grid-cols-2 gap-6 animate-slideUp">
-                <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-gray-100 mb-2">{t('orders.details.orderInfo')}</h3>
-                  <div className="space-y-2 text-sm">
-                    <div><span className="text-slate-600 dark:text-gray-400">{t('orders.table.orderId')}:</span> <span className="font-medium">{selectedOrder.id}</span></div>
-                    <div><span className="text-slate-600 dark:text-gray-400">{t('orders.table.date')}:</span> {new Date(selectedOrder.createdAt).toLocaleDateString()}</div>
-                    <div className="flex items-center space-x-2 space-x-reverse">
-                      <span className="text-slate-600 dark:text-gray-400">{t('orders.table.status')}:</span>
-                      <Badge variant={getStatusVariant(selectedOrder.status)}>
-                        {React.createElement(getStatusIcon(selectedOrder.status), { className: "h-3 w-3 ltr:mr-1 rtl:ml-1" })}
-                        {selectedOrder.status}
-                      </Badge>
+              {/* Order Status with Update */}
+              <div className="glass rounded-2xl p-4 border border-luxury-gray-200 dark:border-luxury-gray-700">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400 mb-2">Order Status</div>
+                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium ${getStatusColor(selectedOrder.status)}`}>
+                      {React.createElement(getStatusIcon(selectedOrder.status), { className: "h-5 w-5" })}
+                      <span className="capitalize">{selectedOrder.status}</span>
+                    </div>
+                  </div>
+                  <div className="w-full sm:w-64">
+                    <CustomSelect
+                      label="Update Status"
+                      value={selectedOrder.status}
+                      onChange={(value) => handleUpdateOrderStatus(selectedOrder.id, value as Order['status'])}
+                      options={statusOptions}
+                      placeholder="Select status"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer & Order Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="glass rounded-2xl p-4 border border-luxury-gray-200 dark:border-luxury-gray-700">
+                  <h3 className="font-semibold text-luxury-text-light dark:text-luxury-text-dark mb-4 flex items-center gap-2">
+                    <User className="h-5 w-5 text-luxury-gold-primary" />
+                    {t('orders.details.customerInfo')}
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <User className="h-4 w-4 text-luxury-gray-400 mt-1" />
+                      <div>
+                        <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400">Name</div>
+                        <div className="text-luxury-text-light dark:text-luxury-text-dark font-medium">{selectedOrder.customerName}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Mail className="h-4 w-4 text-luxury-gray-400 mt-1" />
+                      <div>
+                        <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400">Email</div>
+                        <div className="text-luxury-text-light dark:text-luxury-text-dark">{selectedOrder.customerEmail}</div>
+                      </div>
+                    </div>
+                    {selectedOrder.phoneNumber && (
+                      <div className="flex items-start gap-3">
+                        <Phone className="h-4 w-4 text-luxury-gray-400 mt-1" />
+                        <div>
+                          <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400">Phone</div>
+                          <div className="text-luxury-text-light dark:text-luxury-text-dark">{selectedOrder.phoneNumber}</div>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-start gap-3">
+                      <MapPin className="h-4 w-4 text-luxury-gray-400 mt-1" />
+                      <div>
+                        <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400">Address</div>
+                        <div className="text-luxury-text-light dark:text-luxury-text-dark">{selectedOrder.shippingAddress}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
-                
-                <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-gray-100 mb-2">{t('orders.details.customerInfo')}</h3>
-                  <div className="space-y-2 text-sm">
-                    <div><span className="text-slate-600 dark:text-gray-400">{t('orders.details.name')}:</span> {selectedOrder.customerName}</div>
-                    <div><span className="text-slate-600 dark:text-gray-400">{t('orders.details.email')}:</span> {selectedOrder.customerEmail}</div>
-                    <div><span className="text-slate-600 dark:text-gray-400">{t('orders.details.address')}:</span> {selectedOrder.shippingAddress}</div>
+
+                <div className="glass rounded-2xl p-4 border border-luxury-gray-200 dark:border-luxury-gray-700">
+                  <h3 className="font-semibold text-luxury-text-light dark:text-luxury-text-dark mb-4 flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-luxury-gold-primary" />
+                    Order Information
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400">Order Date</div>
+                      <div className="text-luxury-text-light dark:text-luxury-text-dark font-medium">
+                        {new Date(selectedOrder.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400">Total Items</div>
+                      <div className="text-luxury-text-light dark:text-luxury-text-dark font-medium">
+                        {selectedOrder.items.length} {selectedOrder.items.length !== 1 ? 'items' : 'item'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400">Order Total</div>
+                      <div className="text-2xl font-bold text-luxury-gold-primary">${selectedOrder.total.toFixed(2)}</div>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Order Items */}
-              <div className="animate-slideUp">
-                <h3 className="font-semibold text-slate-900 dark:text-gray-100 mb-4">{t('orders.details.items')}</h3>
+              <div className="glass rounded-2xl p-4 border border-luxury-gray-200 dark:border-luxury-gray-700">
+                <h3 className="font-semibold text-luxury-text-light dark:text-luxury-text-dark mb-4 flex items-center gap-2">
+                  <Package className="h-5 w-5 text-luxury-gold-primary" />
+                  Order Items
+                </h3>
                 <div className="space-y-3">
                   {selectedOrder.items.map((item, index) => (
-                    <div 
-                      key={index} 
-                      className="flex items-center space-x-4 space-x-reverse p-3 bg-slate-50 dark:bg-gray-800 rounded-lg animate-fadeIn"
-                      style={{ animationDelay: `${index * 100}ms` }}
+                    <div
+                      key={index}
+                      className="flex items-center gap-4 p-3 bg-luxury-gray-50 dark:bg-luxury-gray-800 rounded-xl"
                     >
                       <img
                         src={item.product.image}
                         alt={item.product.name}
-                        className="w-12 h-12 rounded-lg object-cover"
+                        className="w-16 h-16 rounded-lg object-cover"
                       />
                       <div className="flex-1">
-                        <h4 className="font-medium text-slate-900 dark:text-gray-100">{item.product.name}</h4>
-                        <p className="text-sm text-slate-600 dark:text-gray-400">{t('orders.details.quantity')}: {item.quantity}</p>
+                        <h4 className="font-medium text-luxury-text-light dark:text-luxury-text-dark">{item.product.name}</h4>
+                        <p className="text-sm text-luxury-gray-500 dark:text-luxury-gray-400">
+                          Quantity: {item.quantity} × ${item.product.price}
+                        </p>
                       </div>
-                      <div className="ltr:text-right rtl:text-left">
-                        <p className="font-medium text-slate-900 dark:text-gray-100">${(item.product.price * item.quantity).toFixed(2)}</p>
-                        <p className="text-sm text-slate-600 dark:text-gray-400">${item.product.price} {t('orders.details.each')}</p>
+                      <div className="text-right">
+                        <div className="font-bold text-luxury-text-light dark:text-luxury-text-dark">
+                          ${(item.product.price * item.quantity).toFixed(2)}
+                        </div>
                       </div>
                     </div>
                   ))}
-                </div>
-                
-                <div className="border-t border-slate-200 dark:border-gray-800 mt-4 pt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold text-slate-900 dark:text-gray-100">{t('orders.table.total')}</span>
-                    <span className="text-lg font-bold text-slate-900 dark:text-gray-100">${selectedOrder.total.toFixed(2)}</span>
-                  </div>
                 </div>
               </div>
             </div>

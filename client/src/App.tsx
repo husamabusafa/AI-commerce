@@ -14,9 +14,9 @@ import Products from './components/admin/Products';
 import AddProduct from './components/admin/AddProduct';
 import EditProduct from './components/admin/EditProduct';
 import Orders from './components/admin/Orders';
-import Users from './components/admin/Users';
 import Categories from './components/admin/Categories';
 import AddCategory from './components/admin/AddCategory';
+import Profile from './components/admin/Profile';
 
 // Client Components
 import Shop from './components/client/Shop';
@@ -26,6 +26,7 @@ import Checkout from './components/client/Checkout';
 import ClientOrders from './components/client/ClientOrders';
 import Account from './components/client/Account';
 import Login from './components/auth/Login';
+import Register from './components/auth/Register';
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -46,19 +47,32 @@ function AppContent() {
     return children;
   };
 
+  // AdminRoute wrapper - only admins can access
+  const AdminRoute = ({ children }: { children: React.ReactElement }) => {
+    if (!state.currentUser) {
+      return <Navigate to="/login" replace state={{ from: location }} />;
+    }
+    if (state.currentUser.role !== 'ADMIN') {
+      return <Navigate to="/" replace />;
+    }
+    return children;
+  };
+
+  const isAuthPage = location.pathname.startsWith('/login') || location.pathname.startsWith('/register');
+
   return (
     <div className="min-h-screen app-bg animate-fadeIn">
       {/* Fixed sidebar - hidden on mobile (not on auth routes) */}
-      {!location.pathname.startsWith('/login') && (
+      {!isAuthPage && (
         <div className="hidden lg:block">
           <Navigation />
         </div>
       )}
       
       {/* Content area - responsive padding (mirrors in RTL) */}
-      <div className={`${!location.pathname.startsWith('/login') ? 'lg:ltr:pr-[19rem] lg:rtl:pl-[19rem]' : ''} h-full flex flex-col`}>
+      <div className={`${!isAuthPage ? 'lg:ltr:pr-[19rem] lg:rtl:pl-[19rem]' : ''} h-full flex flex-col`}>
         {/* Sticky Topbar (not on auth routes) */}
-        {!location.pathname.startsWith('/login') && <Topbar />}
+        {!isAuthPage && <Topbar />}
         
         {/* Scrollable page content below topbar */}
         <main className="flex-1 overflow-y-auto animate-slideIn">
@@ -95,73 +109,75 @@ function AppContent() {
 
               {/* Auth */}
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-              {/* Admin routes */}
+              {/* Profile (accessible by both admin and client) */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Admin routes - Only accessible by ADMIN role */}
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute>
+                  <AdminRoute>
                     <Dashboard />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/admin/products"
                 element={
-                  <ProtectedRoute>
+                  <AdminRoute>
                     <Products />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/admin/products/add"
                 element={
-                  <ProtectedRoute>
+                  <AdminRoute>
                     <AddProduct />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/admin/products/:id/edit"
                 element={
-                  <ProtectedRoute>
+                  <AdminRoute>
                     <EditProduct />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/admin/categories"
                 element={
-                  <ProtectedRoute>
+                  <AdminRoute>
                     <Categories />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/admin/categories/add"
                 element={
-                  <ProtectedRoute>
+                  <AdminRoute>
                     <AddCategory />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 }
               />
               <Route
                 path="/admin/orders"
                 element={
-                  <ProtectedRoute>
+                  <AdminRoute>
                     <Orders />
-                  </ProtectedRoute>
+                  </AdminRoute>
                 }
               />
-              <Route
-                path="/admin/users"
-                element={
-                  <ProtectedRoute>
-                    <Users />
-                  </ProtectedRoute>
-                }
-              />
-
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

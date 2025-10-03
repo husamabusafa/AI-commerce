@@ -330,6 +330,107 @@ async function main() {
     },
   });
 
+  const order4 = await prisma.order.create({
+    data: {
+      orderNumber: 'ORD-004',
+      customerName: 'John Smith',
+      customerEmail: 'john@example.com',
+      shippingAddress: '123 Main St, New York, NY 10001',
+      phoneNumber: '+1234567890',
+      total: 899.99,
+      status: OrderStatus.PENDING,
+      userId: clientUser1.id,
+      items: {
+        create: [
+          {
+            productId: products[2].id, // Smartphone 256GB
+            quantity: 1,
+            price: 899.99,
+          },
+        ],
+      },
+    },
+  });
+
+  const order5 = await prisma.order.create({
+    data: {
+      orderNumber: 'ORD-005',
+      customerName: 'أحمد محمد العلي',
+      customerEmail: 'ahmed@example.com',
+      shippingAddress: 'جدة، المملكة العربية السعودية',
+      phoneNumber: '+966512345678',
+      total: 729.97,
+      status: OrderStatus.DELIVERED,
+      userId: clientUser2.id,
+      items: {
+        create: [
+          {
+            productId: products[3].id, // Ergonomic Office Chair
+            quantity: 2,
+            price: 349.99,
+          },
+          {
+            productId: products[5].id, // Premium Coffee Maker  
+            quantity: 1,
+            price: 189.99,
+          },
+        ],
+      },
+    },
+  });
+
+  const order6 = await prisma.order.create({
+    data: {
+      orderNumber: 'ORD-006',
+      customerName: 'Sarah Johnson',
+      customerEmail: 'sarah@example.com',
+      shippingAddress: '789 Elm St, Chicago, IL 60601',
+      phoneNumber: '+1987654321',
+      total: 539.98,
+      status: OrderStatus.CANCELLED,
+      items: {
+        create: [
+          {
+            productId: products[7].id, // Luxury Leather Jacket
+            quantity: 1,
+            price: 449.99,
+          },
+          {
+            productId: products[8].id, // Professional Yoga Mat
+            quantity: 1,
+            price: 89.99,
+          },
+        ],
+      },
+    },
+  });
+
+  const order7 = await prisma.order.create({
+    data: {
+      orderNumber: 'ORD-007',
+      customerName: 'Mike Wilson',
+      customerEmail: 'mike@example.com',
+      shippingAddress: '321 Pine St, Seattle, WA 98101',
+      phoneNumber: '+1122334455',
+      total: 489.98,
+      status: OrderStatus.PROCESSING,
+      items: {
+        create: [
+          {
+            productId: products[0].id, // Premium Wireless Headphones
+            quantity: 2,
+            price: 199.99,
+          },
+          {
+            productId: products[8].id, // Professional Yoga Mat
+            quantity: 1,
+            price: 89.99,
+          },
+        ],
+      },
+    },
+  });
+
   console.log('🛍️ Created orders');
 
   // Add some items to user carts
@@ -356,7 +457,7 @@ async function main() {
   console.log(`- ${categories.length} categories created`);
   console.log(`- 3 users created (1 admin, 2 clients)`);
   console.log(`- ${products.length} products created`);
-  console.log(`- 3 orders created`);
+  console.log(`- 7 orders created`);
   console.log(`- 2 cart items created`);
   console.log('\n🔐 Login credentials:');
   console.log('Admin: admin@ecommerce.com / password123');

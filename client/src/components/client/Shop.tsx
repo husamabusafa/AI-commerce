@@ -59,7 +59,7 @@ export default function Shop() {
           }} />
         </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto">
+        <div className="relative z-10 max-w-7xl mx-auto">
           <h1 className="arabic-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 text-luxury-text-light dark:text-luxury-text-dark">
             {t('hero.title')}
           </h1>

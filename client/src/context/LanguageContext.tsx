@@ -226,6 +226,13 @@ const translations: Record<Language, Record<string, string>> = {
     'products.deleteConfirm': 'هل أنت متأكد من حذف المنتج',
     'products.deleted': 'تم حذف المنتج بنجاح',
     'products.deleteError': 'حدث خطأ أثناء حذف المنتج',
+    'products.notFound': 'المنتج غير موجود',
+    'products.notFoundDesc': 'المنتج الذي تحاول تحريره غير موجود',
+
+    // Edit Product
+    'editProduct.title': 'تحرير المنتج',
+    'editProduct.subtitle': 'تحديث معلومات المنتج',
+    'editProduct.update': 'تحديث المنتج',
 
     // Users (Admin)
     'users.title': 'المستخدمين',
@@ -489,6 +496,13 @@ const translations: Record<Language, Record<string, string>> = {
     'products.deleteConfirm': 'Are you sure you want to delete product',
     'products.deleted': 'Product deleted successfully',
     'products.deleteError': 'Error deleting product',
+    'products.notFound': 'Product not found',
+    'products.notFoundDesc': 'The product you are trying to edit does not exist',
+
+    // Edit Product
+    'editProduct.title': 'Edit Product',
+    'editProduct.subtitle': 'Update product information',
+    'editProduct.update': 'Update Product',
 
     // Users (Admin)
     'users.title': 'Users',

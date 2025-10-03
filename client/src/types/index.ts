@@ -28,12 +28,14 @@ export interface CartItem {
 
 export interface Order {
   id: string;
+  orderNumber?: string;
   items: CartItem[];
   total: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   customerName: string;
   customerEmail: string;
   shippingAddress: string;
+  phoneNumber?: string;
   createdAt: string;
 }
 
@@ -42,7 +44,7 @@ export interface User {
   name: string;
   nameEn?: string;
   email: string;
-  role: 'admin' | 'client';
+  role: 'ADMIN' | 'CLIENT';
   avatar: string;
   joinedAt: string;
 }

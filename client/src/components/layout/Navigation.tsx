@@ -1,27 +1,47 @@
-import { Settings, ShoppingBag, Users, Package, BarChart3, Search, User, ShoppingCart, Menu, X, Tags } from 'lucide-react';
+import { Settings, ShoppingBag, Package, BarChart3, Search, User, ShoppingCart, Menu, X, Tags, LogOut, ChevronDown } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useCart } from '../../hooks/useCart';
+import { logout } from '../../context/AppContext';
 import Button from '../shared/Button';
 import ThemeToggle from '../shared/ThemeToggle';
 import LanguageToggle from '../shared/LanguageToggle';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function Navigation() {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const { t, formatNumber, state: langState } = useLanguage();
   const { cartCount } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    logout(dispatch);
+    setIsProfileOpen(false);
+    navigate('/login');
+  };
   
   const adminNavItems = [
     { id: 'dashboard', label: t('nav.dashboard'), icon: BarChart3 },
     { id: 'products', label: t('nav.products'), icon: Package },
     { id: 'categories', label: t('nav.categories'), icon: Tags },
-    { id: 'orders', label: t('nav.orders'), icon: ShoppingBag },
-    { id: 'users', label: t('nav.users'), icon: Users }
+    { id: 'orders', label: t('nav.orders'), icon: ShoppingBag }
   ];
 
   const clientNavItems = [
@@ -41,7 +61,6 @@ export default function Navigation() {
         case 'products': return '/admin/products';
         case 'categories': return '/admin/categories';
         case 'orders': return '/admin/orders';
-        case 'users': return '/admin/users';
         default: return '/admin';
       }
     } else {
@@ -113,7 +132,7 @@ export default function Navigation() {
                 >
                   <Icon className="h-5 w-5 ltr:mr-3 rtl:ml-3 flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200" />
                   <span className="arabic-text">{item.label}</span>
-                  {item.id === 'cart' && cartItemsCount > 0 && (
+                  {item.id === 'cart' && state.currentPanel !== 'admin' && cartItemsCount > 0 && (
                     <span className="ltr:mr-auto rtl:ml-auto bg-luxury-gold-secondary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                       {formatNumber(cartItemsCount)}
                     </span>
@@ -123,25 +142,58 @@ export default function Navigation() {
             })}
           </div>
 
-          {/* Bottom Profile Box */}
+          {/* Bottom Profile Box with Dropdown */}
           {state.currentUser && (
-            <div className="mt-auto pt-4">
-              <div className="rounded-2xl border border-luxury-gray-200 dark:border-luxury-gray-700 bg-luxury-light/60 dark:bg-luxury-dark/60 p-3">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={state.currentUser.avatar}
-                    alt={state.currentUser.name}
-                    className="h-10 w-10 rounded-xl border-2 border-luxury-gold-primary/20 object-cover"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="arabic-text text-sm font-medium text-luxury-text-light dark:text-luxury-text-dark truncate">
-                      {langState.currentLanguage === 'ar' ? state.currentUser.name : (state.currentUser.nameEn || state.currentUser.name)}
-                    </p>
-                    <p className="arabic-text text-xs text-luxury-gray-500 dark:text-luxury-gray-400 truncate">
-                      {state.currentUser.email}
-                    </p>
+            <div className="mt-auto pt-4" ref={profileRef}>
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="w-full rounded-2xl border border-luxury-gray-200 dark:border-luxury-gray-700 bg-luxury-light/60 dark:bg-luxury-dark/60 p-3 hover:bg-luxury-gray-100 dark:hover:bg-luxury-gray-800 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={state.currentUser.avatar}
+                      alt={state.currentUser.name}
+                      className="h-10 w-10 rounded-xl border-2 border-luxury-gold-primary/20 object-cover"
+                    />
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="arabic-text text-sm font-medium text-luxury-text-light dark:text-luxury-text-dark truncate">
+                        {langState.currentLanguage === 'ar' ? state.currentUser.name : (state.currentUser.nameEn || state.currentUser.name)}
+                      </p>
+                      <p className="arabic-text text-xs text-luxury-gray-500 dark:text-luxury-gray-400 truncate">
+                        {state.currentUser.email}
+                      </p>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-luxury-gray-400 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
                   </div>
-                </div>
+                </button>
+
+                {/* Dropdown Menu */}
+                {isProfileOpen && (
+                  <div className="absolute bottom-full left-0 right-0 mb-2 glass rounded-2xl border border-luxury-gray-200 dark:border-luxury-gray-700 shadow-luxury animate-scaleIn overflow-hidden">
+                    <button
+                      onClick={() => {
+                        navigate('/profile');
+                        setIsProfileOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-luxury-gray-100 dark:hover:bg-luxury-gray-800 transition-all text-left"
+                    >
+                      <User className="h-4 w-4 text-luxury-gray-500" />
+                      <span className="text-sm font-medium text-luxury-text-light dark:text-luxury-text-dark arabic-text">
+                        {t('user.profile')}
+                      </span>
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-left border-t border-luxury-gray-200 dark:border-luxury-gray-700"
+                    >
+                      <LogOut className="h-4 w-4 text-red-500" />
+                      <span className="text-sm font-medium text-red-600 dark:text-red-400 arabic-text">
+                        {t('user.logout')}
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -226,7 +278,7 @@ export default function Navigation() {
                       >
                         <Icon className="h-6 w-6 ltr:ml-3 rtl:mr-3 flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-200" />
                         <span className="arabic-text">{item.label}</span>
-                            {item.id === 'cart' && cartItemsCount > 0 && (
+                            {item.id === 'cart' && state.currentPanel !== 'admin' && cartItemsCount > 0 && (
                               <span className="ltr:mr-auto rtl:ml-auto bg-luxury-gold-secondary text-white text-sm rounded-full h-6 w-6 flex items-center justify-center font-medium">
                                 {formatNumber(cartItemsCount)}
                               </span>
@@ -238,7 +290,7 @@ export default function Navigation() {
 
                 {/* Mobile Bottom Profile Box */}
                 {state.currentUser && (
-                  <div className="mt-auto pt-4">
+                  <div className="mt-auto pt-4 space-y-2">
                     <div className="rounded-2xl border border-luxury-gray-200 dark:border-luxury-gray-700 bg-luxury-light/60 dark:bg-luxury-dark/60 p-4">
                       <div className="flex items-center gap-4">
                         <img
@@ -255,6 +307,26 @@ export default function Navigation() {
                           </p>
                         </div>
                       </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => {
+                          navigate('/profile');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-luxury-gold-primary text-white rounded-xl font-medium hover:bg-luxury-gold-secondary transition-all"
+                      >
+                        <User className="h-4 w-4" />
+                        <span className="text-sm arabic-text">{t('user.profile')}</span>
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-all"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span className="text-sm arabic-text">{t('user.logout')}</span>
+                      </button>
                     </div>
                   </div>
                 )}

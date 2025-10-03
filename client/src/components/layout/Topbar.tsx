@@ -45,7 +45,7 @@ export default function Topbar() {
             </div>
 
             {/* Enhanced Search - Desktop */}
-            <div className="flex-1 max-w-4xl relative">
+            <div className="flex-1 max-w-7xl relative">
               <div className="relative">
                   <span className="absolute inset-y-0 rtl:right-4 ltr:left-4 flex items-center text-luxury-gray-500/80 dark:text-luxury-gray-400/80 pointer-events-none z-10">
                     <Search className="h-5 w-5" />
@@ -132,19 +132,21 @@ export default function Topbar() {
               <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-luxury-gray-600 dark:text-luxury-gray-400" />
             </Button>
             
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="p-2 sm:p-3 relative hover:bg-luxury-gray-100 dark:hover:bg-luxury-gray-700"
-              onClick={() => navigate('/cart')}
-            >
-              <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-luxury-gray-600 dark:text-luxury-gray-400" />
-              {cartItemsCount > 0 && (
-                <span className="absolute -top-1 ltr:-right-1 rtl:-left-1 h-4 sm:h-5 min-w-[16px] sm:min-w-[20px] px-1 rounded-full bg-luxury-gold-primary text-white text-xs font-medium flex items-center justify-center">
-                  {formatNumber(cartItemsCount)}
-                </span>
-              )}
-            </Button>
+            {state.currentPanel !== 'admin' && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-2 sm:p-3 relative hover:bg-luxury-gray-100 dark:hover:bg-luxury-gray-700"
+                onClick={() => navigate('/cart')}
+              >
+                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-luxury-gray-600 dark:text-luxury-gray-400" />
+                {cartItemsCount > 0 && (
+                  <span className="absolute -top-1 ltr:-right-1 rtl:-left-1 h-4 sm:h-5 min-w-[16px] sm:min-w-[20px] px-1 rounded-full bg-luxury-gold-primary text-white text-xs font-medium flex items-center justify-center">
+                    {formatNumber(cartItemsCount)}
+                  </span>
+                )}
+              </Button>
+            )}
             
             {state.currentUser && (
               <div className="hidden sm:flex items-center gap-3">

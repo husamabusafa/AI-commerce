@@ -6,6 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import Card from '../shared/Card';
 import Button from '../shared/Button';
 import Input from '../shared/Input';
+import CustomSelect from '../shared/CustomSelect';
 
 export default function AddProduct() {
   const navigate = useNavigate();
@@ -107,7 +108,7 @@ export default function AddProduct() {
   return (
     <div className="min-h-screen bg-luxury-light dark:bg-luxury-dark p-6 animate-slideIn">
       {/* Header */}
-      <div className="max-w-6xl mx-auto mb-8">
+      <div className="max-w-7xl mx-auto mb-8">
         <div className="flex items-center space-x-4 rtl:space-x-reverse mb-6">
           <Button variant="ghost" onClick={goBack} className="animate-fadeIn hover:scale-105">
             <ArrowLeft className="h-5 w-5 ltr:mr-2 rtl:ml-2 rtl:scale-x-[-1]" />
@@ -125,7 +126,7 @@ export default function AddProduct() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Form */}
@@ -177,29 +178,15 @@ export default function AddProduct() {
                   </div>
 
                   <div className="animate-slideUp">
-                    <label className="block text-sm font-medium text-luxury-gray-700 dark:text-luxury-gray-300 mb-2">
-                      {t('addProduct.category')} <span className="text-red-500">*</span>
-                    </label>
-                    <select
+                    <CustomSelect
+                      label={t('addProduct.category')}
                       value={formData.categoryId}
-                      onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                      className={`block w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-luxury-dark text-luxury-text-light dark:text-luxury-text-dark focus:outline-none focus:ring-2 focus:ring-luxury-gold-primary transition-all duration-200 ${
-                        errors.categoryId ? 'border-red-300 dark:border-red-600' : 'border-luxury-gray-300 dark:border-luxury-gray-600 hover:border-luxury-gray-400 dark:hover:border-luxury-gray-500'
-                      }`}
-                    >
-                      <option value="">{t('addProduct.selectCategory')}</option>
-                      {categories.map((category: any) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.categoryId && (
-                      <p className="text-sm text-red-600 dark:text-red-400 mt-2 animate-fadeIn flex items-center">
-                        <AlertCircle className="h-4 w-4 mr-1" />
-                        {errors.categoryId}
-                      </p>
-                    )}
+                      onChange={(value) => setFormData({ ...formData, categoryId: value })}
+                      options={categories}
+                      placeholder={t('addProduct.selectCategory')}
+                      error={errors.categoryId}
+                      required
+                    />
                   </div>
 
                   <div className="animate-slideUp">

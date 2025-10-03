@@ -6,14 +6,15 @@ import Button from '../shared/Button';
 
 export default function Login() {
   const { t, state: langState } = useLanguage();
-  const { handleLogin, isLoading, isAuthenticated } = useAuth();
+  const { handleLogin, isLoading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation() as any;
 
-  // If already authenticated, redirect to home or from
+  // If already authenticated, redirect to admin panel if admin, otherwise home or from
   const from = location.state?.from?.pathname || '/';
   if (isAuthenticated) {
-    return <Navigate to={from} replace />;
+    const destination = user?.role === 'ADMIN' ? '/admin' : from;
+    return <Navigate to={destination} replace />;
   }
 
   const [email, setEmail] = useState('admin@ecommerce.com');
@@ -24,8 +25,11 @@ export default function Login() {
     e.preventDefault();
     setError(null);
     const res = await handleLogin(email, password);
+    console.log("resresresres",res);
     if (res?.success) {
-      navigate(from, { replace: true });
+      // Navigate to admin panel if user is admin, otherwise go to home or from location
+      const destination = res.user?.role === 'ADMIN' ? '/admin' : from;
+      navigate(destination, { replace: true });
     } else {
       setError(res?.error || t('auth.loginFailed') || 'Login failed');
     }
@@ -80,7 +84,37 @@ export default function Login() {
           </Button>
         </form>
 
-        <div className="mt-4 text-xs text-luxury-gray-500 dark:text-luxury-gray-400 arabic-text">
+        {/* Register and Continue Links */}
+        <div className="mt-6 space-y-3">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-luxury-gray-200 dark:border-luxury-gray-700"></div>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-2 bg-white dark:bg-luxury-dark text-luxury-gray-500 dark:text-luxury-gray-400 arabic-text">
+                {langState.currentLanguage === 'ar' ? 'أو' : 'OR'}
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/register')}
+            className="w-full px-4 py-2 border border-luxury-gold-primary text-luxury-gold-primary rounded-xl font-medium hover:bg-luxury-gold-primary/10 transition-all arabic-text"
+          >
+            {langState.currentLanguage === 'ar' ? 'إنشاء حساب جديد' : 'Create Account'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="w-full px-4 py-2 text-luxury-gray-600 dark:text-luxury-gray-400 hover:text-luxury-text-light dark:hover:text-luxury-text-dark transition-all text-sm arabic-text"
+          >
+            {langState.currentLanguage === 'ar' ? 'متابعة بدون تسجيل الدخول' : 'Continue without login'}
+          </button>
+        </div>
+
+        <div className="mt-4 text-xs text-center text-luxury-gray-500 dark:text-luxury-gray-400 arabic-text">
           {t('auth.hint') || (langState.currentLanguage === 'ar' ? 'استخدم بيانات المشرف الافتراضية أعلاه' : 'Use the default admin credentials above')}
         </div>
       </div>
