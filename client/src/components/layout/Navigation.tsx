@@ -79,7 +79,7 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="fixed ltr:right-0 rtl:left-0 top-4 bottom-4 ltr:mr-4 rtl:ml-4 w-72 z-40 glass rounded-3xl shadow-luxury">
+      <nav className="fixed ltr:left-0 rtl:right-0 top-4 bottom-4 ltr:ml-4 rtl:mr-4 w-72 z-40 glass rounded-3xl shadow-luxury">
         <div className="h-full p-6 flex flex-col">
           {/* Brand + Controls */}
           <div className="mb-6">
@@ -205,7 +205,7 @@ export default function Navigation() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsMobileMenuOpen(true)}
-          className="fixed top-4 ltr:right-4 rtl:left-4 z-50 p-3 bg-luxury-gold-primary text-white rounded-2xl shadow-luxury hover:bg-luxury-gold-secondary transition-colors"
+          className="fixed top-4 ltr:left-4 rtl:right-4 z-50 p-3 bg-luxury-gold-primary text-white rounded-2xl shadow-luxury hover:bg-luxury-gold-secondary transition-colors"
         >
           <Menu className="h-6 w-6" />
         </button>
@@ -216,7 +216,7 @@ export default function Navigation() {
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
             
             {/* Mobile Menu Panel */}
-            <div className="fixed ltr:right-0 rtl:left-0 top-0 bottom-0 w-80 max-w-[90vw] bg-luxury-light dark:bg-luxury-dark shadow-luxury animate-slideIn">
+            <div className="fixed ltr:left-0 rtl:right-0 top-0 bottom-0 w-80 max-w-[90vw] bg-luxury-light dark:bg-luxury-dark shadow-luxury animate-slideIn">
               <div className="h-full p-6 flex flex-col">
                 {/* Mobile Header with Brand */}
                 <div className="mb-6">

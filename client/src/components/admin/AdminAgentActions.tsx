@@ -4,6 +4,7 @@ import { useProducts } from '../../hooks/useProducts';
 import { useOrders } from '../../hooks/useOrders';
 import { useMutation, useQuery } from '@apollo/client';
 import { GET_USERS, GET_CATEGORIES, CREATE_CATEGORY, DELETE_CATEGORY } from '../../graphql/queries';
+import { Product, Order, User } from '../../types';
 import toast from 'react-hot-toast';
 
 /**
@@ -29,86 +30,26 @@ export default function AdminAgentActions() {
   // ============================================================
 
   /**
-   * Navigate to any admin page
+   * Navigate to any page in the admin panel
    * Schema: { path: string }
-   * Example: { path: "/admin/products" }
+   * Example paths:
+   * - "/admin" - Dashboard
+   * - "/admin/products" - Products list
+   * - "/admin/products/add" - Add product
+   * - "/admin/products/:id/edit" - Edit product
+   * - "/admin/orders" - Orders list
+   * - "/admin/categories" - Categories list
+   * - "/admin/categories/add" - Add category
    */
   useHsafaAction('navigate', async (params) => {
     const { path } = params as { path: string };
     navigate(path);
-    toast.success(`Navigated to ${path}`);
+    
+    // Extract page name for better feedback
+    const pageName = path.split('/').pop() || 'page';
+    toast.success(`Navigated to ${pageName}`);
+    
     return { success: true, path };
-  });
-
-  /**
-   * Navigate to dashboard
-   * Schema: {}
-   */
-  useHsafaAction('navigateToDashboard', async () => {
-    navigate('/admin');
-    toast.success('Navigated to Dashboard');
-    return { success: true, path: '/admin' };
-  });
-
-  /**
-   * Navigate to products list
-   * Schema: {}
-   */
-  useHsafaAction('navigateToProducts', async () => {
-    navigate('/admin/products');
-    toast.success('Navigated to Products');
-    return { success: true, path: '/admin/products' };
-  });
-
-  /**
-   * Navigate to add product page
-   * Schema: {}
-   */
-  useHsafaAction('navigateToAddProduct', async () => {
-    navigate('/admin/products/add');
-    toast.success('Navigated to Add Product');
-    return { success: true, path: '/admin/products/add' };
-  });
-
-  /**
-   * Navigate to edit product page
-   * Schema: { productId: string }
-   */
-  useHsafaAction('navigateToEditProduct', async (params) => {
-    const { productId } = params as { productId: string };
-    navigate(`/admin/products/${productId}/edit`);
-    toast.success('Navigated to Edit Product');
-    return { success: true, path: `/admin/products/${productId}/edit` };
-  });
-
-  /**
-   * Navigate to orders page
-   * Schema: {}
-   */
-  useHsafaAction('navigateToOrders', async () => {
-    navigate('/admin/orders');
-    toast.success('Navigated to Orders');
-    return { success: true, path: '/admin/orders' };
-  });
-
-  /**
-   * Navigate to categories page
-   * Schema: {}
-   */
-  useHsafaAction('navigateToCategories', async () => {
-    navigate('/admin/categories');
-    toast.success('Navigated to Categories');
-    return { success: true, path: '/admin/categories' };
-  });
-
-  /**
-   * Navigate to add category page
-   * Schema: {}
-   */
-  useHsafaAction('navigateToAddCategory', async () => {
-    navigate('/admin/categories/add');
-    toast.success('Navigated to Add Category');
-    return { success: true, path: '/admin/categories/add' };
   });
 
   // ============================================================
@@ -134,7 +75,7 @@ export default function AdminAgentActions() {
    */
   useHsafaAction('getProduct', async (params) => {
     const { productId } = params as { productId: string };
-    const product = (products || []).find(p => p.id === productId);
+    const product = (products || []).find((p: Product) => p.id === productId);
     
     if (!product) {
       toast.error('Product not found');
@@ -150,7 +91,7 @@ export default function AdminAgentActions() {
    */
   useHsafaAction('searchProducts', async (params) => {
     const { query } = params as { query: string };
-    const filtered = (products || []).filter(p => 
+    const filtered = (products || []).filter((p: Product) => 
       p.name.toLowerCase().includes(query.toLowerCase()) ||
       p.description.toLowerCase().includes(query.toLowerCase()) ||
       (p.category?.name || '').toLowerCase().includes(query.toLowerCase())
@@ -211,7 +152,7 @@ export default function AdminAgentActions() {
    */
   useHsafaAction('updateProduct', async (params) => {
     const { productId, ...updates } = params as any;
-    const result = await updateProduct(productId, updates);
+    const result = await updateProduct({ id: productId, ...updates });
     
     if (result.success) {
       toast.success('Product updated successfully');
@@ -313,7 +254,7 @@ export default function AdminAgentActions() {
    */
   useHsafaAction('getOrder', async (params) => {
     const { orderId } = params as { orderId: string };
-    const order = (allOrders || []).find(o => o.id === orderId);
+    const order = (allOrders || []).find((o: Order) => o.id === orderId);
     
     if (!order) {
       toast.error('Order not found');
@@ -329,7 +270,7 @@ export default function AdminAgentActions() {
    */
   useHsafaAction('searchOrders', async (params) => {
     const { query } = params as { query: string };
-    const filtered = (allOrders || []).filter(o => 
+    const filtered = (allOrders || []).filter((o: Order) => 
       o.id.toLowerCase().includes(query.toLowerCase()) ||
       o.customerName.toLowerCase().includes(query.toLowerCase()) ||
       o.customerEmail.toLowerCase().includes(query.toLowerCase())
@@ -349,7 +290,7 @@ export default function AdminAgentActions() {
    */
   useHsafaAction('filterOrdersByStatus', async (params) => {
     const { status } = params as { status: string };
-    const filtered = (allOrders || []).filter(o => o.status === status);
+    const filtered = (allOrders || []).filter((o: Order) => o.status === status);
     
     return { 
       success: true, 
@@ -387,12 +328,12 @@ export default function AdminAgentActions() {
     const orders = allOrders || [];
     const stats = {
       total: orders.length,
-      pending: orders.filter(o => o.status === 'pending').length,
-      processing: orders.filter(o => o.status === 'processing').length,
-      shipped: orders.filter(o => o.status === 'shipped').length,
-      delivered: orders.filter(o => o.status === 'delivered').length,
-      cancelled: orders.filter(o => o.status === 'cancelled').length,
-      totalRevenue: orders.reduce((sum, o) => sum + o.total, 0),
+      pending: orders.filter((o: Order) => o.status === 'pending').length,
+      processing: orders.filter((o: Order) => o.status === 'processing').length,
+      shipped: orders.filter((o: Order) => o.status === 'shipped').length,
+      delivered: orders.filter((o: Order) => o.status === 'delivered').length,
+      cancelled: orders.filter((o: Order) => o.status === 'cancelled').length,
+      totalRevenue: orders.reduce((sum: number, o: Order) => sum + o.total, 0),
     };
     
     return { success: true, stats };
@@ -422,7 +363,7 @@ export default function AdminAgentActions() {
   useHsafaAction('searchUsers', async (params) => {
     const { query } = params as { query: string };
     const users = usersData?.users || [];
-    const filtered = users.filter((u: any) => 
+    const filtered = users.filter((u: User) => 
       u.name.toLowerCase().includes(query.toLowerCase()) ||
       u.email.toLowerCase().includes(query.toLowerCase())
     );
@@ -442,7 +383,7 @@ export default function AdminAgentActions() {
   useHsafaAction('filterUsersByRole', async (params) => {
     const { role } = params as { role: string };
     const users = usersData?.users || [];
-    const filtered = users.filter((u: any) => u.role === role);
+    const filtered = users.filter((u: User) => u.role === role);
     
     return { 
       success: true, 
@@ -463,9 +404,9 @@ export default function AdminAgentActions() {
     
     const stats = {
       total: users.length,
-      admins: users.filter((u: any) => u.role === 'ADMIN').length,
-      clients: users.filter((u: any) => u.role === 'CLIENT').length,
-      newUsers: users.filter((u: any) => new Date(u.createdAt) >= thirtyDaysAgo).length,
+      admins: users.filter((u: User) => u.role === 'ADMIN').length,
+      clients: users.filter((u: User) => u.role === 'CLIENT').length,
+      newUsers: users.filter((u: User) => new Date(u.joinedAt) >= thirtyDaysAgo).length,
     };
     
     return { success: true, stats };
@@ -485,12 +426,12 @@ export default function AdminAgentActions() {
     const users = usersData?.users || [];
     
     const stats = {
-      totalRevenue: orders.reduce((sum, o) => sum + o.total, 0),
+      totalRevenue: orders.reduce((sum: number, o: Order) => sum + o.total, 0),
       totalOrders: orders.length,
       totalProducts: productsList.length,
       totalUsers: users.length,
-      lowStockProducts: productsList.filter(p => p.stock < 10).length,
-      pendingOrders: orders.filter(o => o.status === 'pending').length,
+      lowStockProducts: productsList.filter((p: Product) => p.stock < 10).length,
+      pendingOrders: orders.filter((o: Order) => o.status === 'pending').length,
     };
     
     return { success: true, stats };
@@ -502,7 +443,7 @@ export default function AdminAgentActions() {
    */
   useHsafaAction('getLowStockProducts', async (params) => {
     const { threshold = 10 } = params as { threshold?: number };
-    const lowStock = (products || []).filter(p => p.stock < threshold);
+    const lowStock = (products || []).filter((p: Product) => p.stock < threshold);
     
     return { 
       success: true, 

@@ -1,7 +1,8 @@
 import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
-import { ThemeProvider } from './context/ThemeContext';
-import { LanguageProvider } from './context/LanguageContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { HsafaProvider, HsafaChat, ContentContainer,  } from '@hsafa/ui-sdk';
 import Navigation from './components/layout/Navigation';
 import Topbar from './components/layout/Topbar';
 import Toast from './components/shared/Toast';
@@ -17,6 +18,7 @@ import Orders from './components/admin/Orders';
 import Categories from './components/admin/Categories';
 import AddCategory from './components/admin/AddCategory';
 import Profile from './components/admin/Profile';
+import AdminAgentActions from './components/admin/AdminAgentActions';
 
 // Client Components
 import Shop from './components/client/Shop';
@@ -31,6 +33,8 @@ import Register from './components/auth/Register';
 function AppContent() {
   const { state, dispatch } = useApp();
   const location = useLocation();
+  const { state: themeState } = useTheme();
+  const { state: languageState } = useLanguage();
 
   // Keep currentPanel in sync with URL for labels and RTL paddings
   React.useEffect(() => {
@@ -60,6 +64,24 @@ function AppContent() {
 
   const isAuthPage = location.pathname.startsWith('/login') || location.pathname.startsWith('/register');
 
+  // Admin pages wrapper with AI agent
+  const AdminPageWrapper = ({ children }: { children: React.ReactElement }) => {
+    return (
+      <>
+        {/* <AdminAgentActions /> */}
+        <HsafaChat
+          agentId="cmfx4jbf900e9qgl98wregwim"
+          theme={themeState.theme as 'light' | 'dark'}
+          language={languageState.currentLanguage === 'ar' ? 'ar' : 'en'}
+          dir={languageState.isRTL ? 'rtl' : 'ltr'}
+          defaultOpen={false}
+          alwaysOpen={false}
+        />
+        {children}
+      </>
+    );
+  };
+
   return (
     <div className="min-h-screen app-bg animate-fadeIn">
       {/* Fixed sidebar - hidden on mobile (not on auth routes) */}
@@ -70,7 +92,7 @@ function AppContent() {
       )}
       
       {/* Content area - responsive padding (mirrors in RTL) */}
-      <div className={`${!isAuthPage ? 'lg:ltr:pr-[19rem] lg:rtl:pl-[19rem]' : ''} h-full flex flex-col`}>
+      <div className={`${!isAuthPage ? 'lg:ltr:pl-[19rem] lg:rtl:pr-[19rem]' : ''} h-full flex flex-col`}>
         {/* Sticky Topbar (not on auth routes) */}
         {!isAuthPage && <Topbar />}
         
@@ -126,7 +148,9 @@ function AppContent() {
                 path="/admin"
                 element={
                   <AdminRoute>
-                    <Dashboard />
+                    <AdminPageWrapper>
+                      <Dashboard />
+                    </AdminPageWrapper>
                   </AdminRoute>
                 }
               />
@@ -134,7 +158,9 @@ function AppContent() {
                 path="/admin/products"
                 element={
                   <AdminRoute>
-                    <Products />
+                    <AdminPageWrapper>
+                      <Products />
+                    </AdminPageWrapper>
                   </AdminRoute>
                 }
               />
@@ -142,7 +168,9 @@ function AppContent() {
                 path="/admin/products/add"
                 element={
                   <AdminRoute>
-                    <AddProduct />
+                    <AdminPageWrapper>
+                      <AddProduct />
+                    </AdminPageWrapper>
                   </AdminRoute>
                 }
               />
@@ -150,7 +178,9 @@ function AppContent() {
                 path="/admin/products/:id/edit"
                 element={
                   <AdminRoute>
-                    <EditProduct />
+                    <AdminPageWrapper>
+                      <EditProduct />
+                    </AdminPageWrapper>
                   </AdminRoute>
                 }
               />
@@ -158,7 +188,9 @@ function AppContent() {
                 path="/admin/categories"
                 element={
                   <AdminRoute>
-                    <Categories />
+                    <AdminPageWrapper>
+                      <Categories />
+                    </AdminPageWrapper>
                   </AdminRoute>
                 }
               />
@@ -166,7 +198,9 @@ function AppContent() {
                 path="/admin/categories/add"
                 element={
                   <AdminRoute>
-                    <AddCategory />
+                    <AdminPageWrapper>
+                      <AddCategory />
+                    </AdminPageWrapper>
                   </AdminRoute>
                 }
               />
@@ -174,7 +208,9 @@ function AppContent() {
                 path="/admin/orders"
                 element={
                   <AdminRoute>
-                    <Orders />
+                    <AdminPageWrapper>
+                      <Orders />
+                    </AdminPageWrapper>
                   </AdminRoute>
                 }
               />
@@ -225,10 +261,32 @@ function App() {
     <ThemeProvider>
       <LanguageProvider>
         <AppProvider>
-          <AppContent />
+          <HsafaProvider baseUrl={import.meta.env.VITE_API_BASE_URL || 'http://localhost:3900'}>  
+            <AppWrapper />
+          </HsafaProvider>
         </AppProvider>
       </LanguageProvider>
     </ThemeProvider>
+  );
+}
+
+function AppWrapper() {
+  const { state: themeState } = useTheme();
+  const { state: languageState } = useLanguage();
+
+  return (
+    <ContentContainer
+      theme={themeState.theme as 'light' | 'dark'}
+      enableBorderAnimation={true}
+      borderRadius={16}
+      chatWidth={420}
+      dir={languageState.isRTL ? 'rtl' : 'ltr'}
+      enableMargin={true}
+    >
+      <div className="flex flex-col h-full overflow-y-auto">
+        <AppContent />
+      </div>
+    </ContentContainer>
   );
 }
 

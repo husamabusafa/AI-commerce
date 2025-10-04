@@ -35,6 +35,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@hsafa/ui-sdk": "^0.1.4"
+    "@hsafa/ui-sdk": "^0.1.9"
   }
 }
