@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.11.8",
-    "@hsafa/ui-sdk": "^0.2.2",
+    "@hsafa/ui-sdk": "^0.2.5",
     "@supabase/supabase-js": "^2.57.4",
     "@tabler/icons-react": "^3.35.0",
     "graphql": "^16.11.0",

@@ -2,164 +2,253 @@ import { useHsafaAction } from '@hsafa/ui-sdk';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../../hooks/useProducts';
 import { useOrders } from '../../hooks/useOrders';
-import { useMutation, useQuery } from '@apollo/client';
-import { GET_USERS, GET_CATEGORIES, CREATE_CATEGORY, DELETE_CATEGORY } from '../../graphql/queries';
-import { Product, Order, User } from '../../types';
+import { useMutation } from '@apollo/client';
+import { GET_CATEGORIES, DELETE_CATEGORY } from '../../graphql/queries';
 import toast from 'react-hot-toast';
 
 /**
  * Admin Agent Actions Registry
  * 
- * This component registers all AI agent actions for the admin panel,
- * enabling the agent to control navigation, forms, and CRUD operations.
+ * This component registers UI manipulation actions for the AI agent.
+ * Actions perform operations (navigate, create, update, delete) rather than retrieve data.
+ * The agent can see data through the UI itself.
  */
 export default function AdminAgentActions() {
   const navigate = useNavigate();
-  const { products, categories, createProduct, updateProduct, deleteProduct } = useProducts();
-  const { allOrders, updateOrderStatus } = useOrders();
-  const { data: usersData } = useQuery(GET_USERS);
-  const [createCategoryMutation] = useMutation(CREATE_CATEGORY, {
-    refetchQueries: [{ query: GET_CATEGORIES }],
-  });
+  const { deleteProduct } = useProducts();
+  const { updateOrderStatus } = useOrders();
   const [deleteCategoryMutation] = useMutation(DELETE_CATEGORY, {
     refetchQueries: [{ query: GET_CATEGORIES }],
   });
 
   // ============================================================
-  // NAVIGATION ACTIONS
+  // NAVIGATION ACTION
   // ============================================================
 
   /**
    * Navigate to any page in the admin panel
    * Schema: { path: string }
-   * Example paths:
-   * - "/admin" - Dashboard
-   * - "/admin/products" - Products list
-   * - "/admin/products/add" - Add product
-   * - "/admin/products/:id/edit" - Edit product
-   * - "/admin/orders" - Orders list
-   * - "/admin/categories" - Categories list
-   * - "/admin/categories/add" - Add category
    */
   useHsafaAction('navigate', async (params) => {
     const { path } = params as { path: string };
-    navigate(path);
     
-    // Extract page name for better feedback
-    const pageName = path.split('/').pop() || 'page';
-    toast.success(`Navigated to ${pageName}`);
+    // Only navigate if we're not already on that path
+    if (window.location.pathname !== path) {
+      navigate(path);
+    }
     
-    return { success: true, path };
+    return { success: true };
   });
 
   // ============================================================
-  // PRODUCT CRUD ACTIONS
+  // PRODUCT ACTIONS
   // ============================================================
 
   /**
-   * Get all products
-   * Schema: {}
-   * Returns: { products: Product[] }
+   * Fill product form (streaming - executes on each token)
+   * Schema: { name?, nameAr?, nameEn?, price?, description?, descriptionAr?, descriptionEn?, image?, categoryId?, stock?, featured? }
    */
-  useHsafaAction('getProducts', async () => {
-    return { 
-      success: true, 
-      products: products || [],
-      count: (products || []).length 
-    };
-  });
-
-  /**
-   * Get product by ID
-   * Schema: { productId: string }
-   */
-  useHsafaAction('getProduct', async (params) => {
-    const { productId } = params as { productId: string };
-    const product = (products || []).find((p: Product) => p.id === productId);
+  useHsafaAction('fillProductForm', async (params) => {
+    console.log('[fillProductForm] Called with params:', params);
+    console.log('[fillProductForm] Current path:', window.location.pathname);
     
-    if (!product) {
-      toast.error('Product not found');
-      return { success: false, error: 'Product not found' };
+    // Navigate to add product page if not already there
+    if (!window.location.pathname.includes('/admin/products/add')) {
+      console.log('[fillProductForm] Navigating to add product page...');
+      navigate('/admin/products/add');
+      // Wait for navigation and form to load
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
     
-    return { success: true, product };
-  });
-
-  /**
-   * Search products
-   * Schema: { query: string }
-   */
-  useHsafaAction('searchProducts', async (params) => {
-    const { query } = params as { query: string };
-    const filtered = (products || []).filter((p: Product) => 
-      p.name.toLowerCase().includes(query.toLowerCase()) ||
-      p.description.toLowerCase().includes(query.toLowerCase()) ||
-      (p.category?.name || '').toLowerCase().includes(query.toLowerCase())
-    );
+    // Wait a bit more for the form to be fully rendered
+    await new Promise(resolve => setTimeout(resolve, 300));
     
-    return { 
-      success: true, 
-      products: filtered,
-      count: filtered.length,
-      query 
+    // Fill form fields by dispatching events
+    const fillField = async (fieldName: string, value: any) => {
+      console.log(`[fillProductForm] Trying to fill field: ${fieldName} with value:`, value);
+      
+      // Try multiple selector strategies
+      let input = document.querySelector(`[name="${fieldName}"]`) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+      
+      if (!input) {
+        console.log(`[fillProductForm] Field not found by name, trying by placeholder for ${fieldName}`);
+        // Try to find by partial placeholder match or data attribute
+        const allInputs = document.querySelectorAll('input, textarea, select');
+        for (const el of allInputs) {
+          const element = el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+          // Match by placeholder
+          const placeholder = element.getAttribute('placeholder')?.toLowerCase() || '';
+          
+          if (fieldName === 'name' && (placeholder.includes('name') || placeholder.includes('product name'))) {
+            input = element;
+            console.log('[fillProductForm] Found name input by placeholder');
+            break;
+          } else if (fieldName === 'price' && (placeholder.includes('price') || placeholder === '0.00')) {
+            input = element;
+            console.log('[fillProductForm] Found price input by placeholder');
+            break;
+          } else if (fieldName === 'stock' && (element.type === 'number' && (placeholder === '0' || placeholder.includes('stock')))) {
+            input = element;
+            console.log('[fillProductForm] Found stock input by placeholder');
+            break;
+          } else if (fieldName === 'description' && element.tagName === 'TEXTAREA') {
+            input = element;
+            console.log('[fillProductForm] Found description textarea');
+            break;
+          } else if (fieldName === 'image' && (placeholder.includes('image') || placeholder.includes('url'))) {
+            input = element;
+            console.log('[fillProductForm] Found image input by placeholder');
+            break;
+          } else if (fieldName === 'featured' && element.type === 'checkbox' && element.id === 'featured') {
+            input = element;
+            console.log('[fillProductForm] Found featured checkbox by id');
+            break;
+          }
+        }
+      }
+      
+      // Special handling for categoryId (custom select component)
+      if (fieldName === 'categoryId' && !input) {
+        console.log('[fillProductForm] Trying custom select for categoryId');
+        try {
+          // Find the category select button
+          const selectButton = Array.from(document.querySelectorAll('button[type="button"]')).find(
+            btn => btn.textContent?.includes('Category') || btn.textContent?.includes('Select')
+          ) as HTMLButtonElement;
+          
+          if (selectButton) {
+            console.log('[fillProductForm] Found custom select button, clicking...');
+            selectButton.click();
+            
+            // Wait for dropdown to appear
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            // Find and click the option matching the value
+            const optionButtons = document.querySelectorAll('button[type="button"]');
+            for (const btn of optionButtons) {
+              const button = btn as HTMLButtonElement;
+              // Check if this button contains the category ID or name
+              if (button.getAttribute('data-id') === value || button.textContent?.trim() === value) {
+                console.log('[fillProductForm] Found matching category option, clicking...');
+                button.click();
+                await new Promise(resolve => setTimeout(resolve, 100));
+                console.log('[fillProductForm] Successfully selected category');
+                return;
+              }
+            }
+            console.warn('[fillProductForm] Could not find matching category option');
+          } else {
+            console.warn('[fillProductForm] Could not find custom select button');
+          }
+        } catch (error) {
+          console.error('[fillProductForm] Error handling custom select:', error);
+        }
+        return;
+      }
+      
+      if (input) {
+        console.log(`[fillProductForm] Found element for ${fieldName}:`, input.tagName, input.type);
+        
+        try {
+          // Different handling for different input types
+          if (input.type === 'checkbox') {
+            (input as HTMLInputElement).checked = Boolean(value);
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          } else {
+            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+              input.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : 
+              input.tagName === 'SELECT' ? window.HTMLSelectElement.prototype :
+              window.HTMLInputElement.prototype,
+              'value'
+            )?.set;
+            nativeInputValueSetter?.call(input, String(value));
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          console.log(`[fillProductForm] Successfully filled ${fieldName}`);
+        } catch (error) {
+          console.error(`[fillProductForm] Error filling ${fieldName}:`, error);
+        }
+      } else {
+        console.warn(`[fillProductForm] Could not find input for field: ${fieldName}`);
+      }
     };
+
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== null) {
+        await fillField(key, value);
+      }
+    }
+
+    console.log('[fillProductForm] Finished filling form');
+    return { success: true };
   });
 
   /**
-   * Create a new product
-   * Schema: {
-   *   name: string,
-   *   nameAr?: string,
-   *   nameEn?: string,
-   *   price: number,
-   *   description: string,
-   *   descriptionAr?: string,
-   *   descriptionEn?: string,
-   *   image: string,
-   *   categoryId: string,
-   *   stock: number,
-   *   featured?: boolean
-   * }
+   * Submit product form (executes once when complete)
+   * Schema: {} - Just triggers the form submission
    */
-  useHsafaAction('createProduct', async (params) => {
-    const result = await createProduct(params);
-    
-    if (result.success) {
-      toast.success('Product created successfully');
-      return { success: true, product: result.product };
+  useHsafaAction('submitProductForm', async () => {
+    // Find and click the submit button
+    const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+    if (submitButton) {
+      submitButton.click();
+      return { success: true };
     } else {
-      toast.error(result.error || 'Failed to create product');
-      return { success: false, error: result.error };
+      toast.error('Submit button not found');
+      return { success: false, error: 'Submit button not found' };
     }
   });
 
   /**
-   * Update an existing product
-   * Schema: {
-   *   productId: string,
-   *   name?: string,
-   *   nameAr?: string,
-   *   nameEn?: string,
-   *   price?: number,
-   *   description?: string,
-   *   descriptionAr?: string,
-   *   descriptionEn?: string,
-   *   image?: string,
-   *   categoryId?: string,
-   *   stock?: number,
-   *   featured?: boolean
-   * }
+   * Fill product edit form (streaming - executes on each token)
+   * Schema: { productId, name?, nameAr?, nameEn?, price?, description?, descriptionAr?, descriptionEn?, image?, categoryId?, stock?, featured? }
    */
-  useHsafaAction('updateProduct', async (params) => {
-    const { productId, ...updates } = params as any;
-    const result = await updateProduct({ id: productId, ...updates });
+  useHsafaAction('fillProductEditForm', async (params) => {
+    const { productId, ...fields } = params as any;
     
-    if (result.success) {
-      toast.success('Product updated successfully');
-      return { success: true, product: result.product };
+    // Navigate to edit product page if not already there
+    if (!window.location.pathname.includes(`/admin/products/${productId}/edit`)) {
+      navigate(`/admin/products/${productId}/edit`);
+      // Wait a bit for the page to load
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    // Fill form fields
+    const fillField = (fieldName: string, value: any) => {
+      const input = document.querySelector(`[name="${fieldName}"]`) as HTMLInputElement;
+      if (input) {
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          'value'
+        )?.set;
+        nativeInputValueSetter?.call(input, value);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    };
+
+    Object.entries(fields).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        fillField(key, value);
+      }
+    });
+
+    return { success: true };
+  });
+
+  /**
+   * Submit product update (executes once when complete)
+   * Schema: {} - Just triggers the form submission
+   */
+  useHsafaAction('submitProductUpdate', async () => {
+    // Find and click the submit button
+    const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+    if (submitButton) {
+      submitButton.click();
+      return { success: true };
     } else {
-      toast.error(result.error || 'Failed to update product');
-      return { success: false, error: result.error };
+      toast.error('Submit button not found');
+      return { success: false, error: 'Submit button not found' };
     }
   });
 
@@ -170,7 +259,6 @@ export default function AdminAgentActions() {
   useHsafaAction('deleteProduct', async (params) => {
     const { productId } = params as { productId: string };
     const result = await deleteProduct(productId);
-    
     if (result.success) {
       toast.success('Product deleted successfully');
       return { success: true };
@@ -185,34 +273,51 @@ export default function AdminAgentActions() {
   // ============================================================
 
   /**
-   * Get all categories
-   * Schema: {}
+   * Fill category form (streaming - executes on each token)
+   * Schema: { name?, nameAr?, nameEn?, description? }
    */
-  useHsafaAction('getCategories', async () => {
-    return { 
-      success: true, 
-      categories: categories || [],
-      count: (categories || []).length 
+  useHsafaAction('fillCategoryForm', async (params) => {
+    // Navigate to add category page if not already there
+    if (!window.location.pathname.includes('/admin/categories/add')) {
+      navigate('/admin/categories/add');
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+    
+    // Fill form fields
+    const fillField = (fieldName: string, value: any) => {
+      const input = document.querySelector(`[name="${fieldName}"]`) as HTMLInputElement;
+      if (input) {
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          'value'
+        )?.set;
+        nativeInputValueSetter?.call(input, value);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
     };
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        fillField(key, value);
+      }
+    });
+
+    return { success: true };
   });
 
   /**
-   * Create a new category
-   * Schema: {
-   *   name: string,
-   *   nameAr: string,
-   *   nameEn: string,
-   *   description?: string
-   * }
+   * Submit category form (executes once when complete)
+   * Schema: {} - Just triggers the form submission
    */
-  useHsafaAction('createCategory', async (params) => {
-    try {
-      const { data } = await createCategoryMutation({ variables: { input: params } });
-      toast.success('Category created successfully');
-      return { success: true, category: data.createCategory };
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create category');
-      return { success: false, error: error.message };
+  useHsafaAction('submitCategoryForm', async () => {
+    // Find and click the submit button
+    const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
+    if (submitButton) {
+      submitButton.click();
+      return { success: true };
+    } else {
+      toast.error('Submit button not found');
+      return { success: false, error: 'Submit button not found' };
     }
   });
 
@@ -237,238 +342,19 @@ export default function AdminAgentActions() {
   // ============================================================
 
   /**
-   * Get all orders
-   * Schema: {}
-   */
-  useHsafaAction('getOrders', async () => {
-    return { 
-      success: true, 
-      orders: allOrders || [],
-      count: (allOrders || []).length 
-    };
-  });
-
-  /**
-   * Get order by ID
-   * Schema: { orderId: string }
-   */
-  useHsafaAction('getOrder', async (params) => {
-    const { orderId } = params as { orderId: string };
-    const order = (allOrders || []).find((o: Order) => o.id === orderId);
-    
-    if (!order) {
-      toast.error('Order not found');
-      return { success: false, error: 'Order not found' };
-    }
-    
-    return { success: true, order };
-  });
-
-  /**
-   * Search orders
-   * Schema: { query: string }
-   */
-  useHsafaAction('searchOrders', async (params) => {
-    const { query } = params as { query: string };
-    const filtered = (allOrders || []).filter((o: Order) => 
-      o.id.toLowerCase().includes(query.toLowerCase()) ||
-      o.customerName.toLowerCase().includes(query.toLowerCase()) ||
-      o.customerEmail.toLowerCase().includes(query.toLowerCase())
-    );
-    
-    return { 
-      success: true, 
-      orders: filtered,
-      count: filtered.length,
-      query 
-    };
-  });
-
-  /**
-   * Filter orders by status
-   * Schema: { status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' }
-   */
-  useHsafaAction('filterOrdersByStatus', async (params) => {
-    const { status } = params as { status: string };
-    const filtered = (allOrders || []).filter((o: Order) => o.status === status);
-    
-    return { 
-      success: true, 
-      orders: filtered,
-      count: filtered.length,
-      status 
-    };
-  });
-
-  /**
    * Update order status
-   * Schema: { 
-   *   orderId: string, 
-   *   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' 
-   * }
+   * Schema: { orderId, status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' }
    */
   useHsafaAction('updateOrderStatus', async (params) => {
     const { orderId, status } = params as { orderId: string; status: any };
-    
     try {
       await updateOrderStatus(orderId, status);
       toast.success(`Order status updated to ${status}`);
-      return { success: true, orderId, status };
+      return { success: true };
     } catch (error: any) {
       toast.error(error.message || 'Failed to update order status');
       return { success: false, error: error.message };
     }
-  });
-
-  /**
-   * Get order statistics
-   * Schema: {}
-   */
-  useHsafaAction('getOrderStats', async () => {
-    const orders = allOrders || [];
-    const stats = {
-      total: orders.length,
-      pending: orders.filter((o: Order) => o.status === 'pending').length,
-      processing: orders.filter((o: Order) => o.status === 'processing').length,
-      shipped: orders.filter((o: Order) => o.status === 'shipped').length,
-      delivered: orders.filter((o: Order) => o.status === 'delivered').length,
-      cancelled: orders.filter((o: Order) => o.status === 'cancelled').length,
-      totalRevenue: orders.reduce((sum: number, o: Order) => sum + o.total, 0),
-    };
-    
-    return { success: true, stats };
-  });
-
-  // ============================================================
-  // USER ACTIONS
-  // ============================================================
-
-  /**
-   * Get all users
-   * Schema: {}
-   */
-  useHsafaAction('getUsers', async () => {
-    const users = usersData?.users || [];
-    return { 
-      success: true, 
-      users,
-      count: users.length 
-    };
-  });
-
-  /**
-   * Search users
-   * Schema: { query: string }
-   */
-  useHsafaAction('searchUsers', async (params) => {
-    const { query } = params as { query: string };
-    const users = usersData?.users || [];
-    const filtered = users.filter((u: User) => 
-      u.name.toLowerCase().includes(query.toLowerCase()) ||
-      u.email.toLowerCase().includes(query.toLowerCase())
-    );
-    
-    return { 
-      success: true, 
-      users: filtered,
-      count: filtered.length,
-      query 
-    };
-  });
-
-  /**
-   * Filter users by role
-   * Schema: { role: 'ADMIN' | 'CLIENT' }
-   */
-  useHsafaAction('filterUsersByRole', async (params) => {
-    const { role } = params as { role: string };
-    const users = usersData?.users || [];
-    const filtered = users.filter((u: User) => u.role === role);
-    
-    return { 
-      success: true, 
-      users: filtered,
-      count: filtered.length,
-      role 
-    };
-  });
-
-  /**
-   * Get user statistics
-   * Schema: {}
-   */
-  useHsafaAction('getUserStats', async () => {
-    const users = usersData?.users || [];
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    
-    const stats = {
-      total: users.length,
-      admins: users.filter((u: User) => u.role === 'ADMIN').length,
-      clients: users.filter((u: User) => u.role === 'CLIENT').length,
-      newUsers: users.filter((u: User) => new Date(u.joinedAt) >= thirtyDaysAgo).length,
-    };
-    
-    return { success: true, stats };
-  });
-
-  // ============================================================
-  // DASHBOARD ACTIONS
-  // ============================================================
-
-  /**
-   * Get dashboard statistics
-   * Schema: {}
-   */
-  useHsafaAction('getDashboardStats', async () => {
-    const orders = allOrders || [];
-    const productsList = products || [];
-    const users = usersData?.users || [];
-    
-    const stats = {
-      totalRevenue: orders.reduce((sum: number, o: Order) => sum + o.total, 0),
-      totalOrders: orders.length,
-      totalProducts: productsList.length,
-      totalUsers: users.length,
-      lowStockProducts: productsList.filter((p: Product) => p.stock < 10).length,
-      pendingOrders: orders.filter((o: Order) => o.status === 'pending').length,
-    };
-    
-    return { success: true, stats };
-  });
-
-  /**
-   * Get low stock products
-   * Schema: { threshold?: number }
-   */
-  useHsafaAction('getLowStockProducts', async (params) => {
-    const { threshold = 10 } = params as { threshold?: number };
-    const lowStock = (products || []).filter((p: Product) => p.stock < threshold);
-    
-    return { 
-      success: true, 
-      products: lowStock,
-      count: lowStock.length,
-      threshold 
-    };
-  });
-
-  /**
-   * Get recent orders
-   * Schema: { limit?: number }
-   */
-  useHsafaAction('getRecentOrders', async (params) => {
-    const { limit = 5 } = params as { limit?: number };
-    const sorted = [...(allOrders || [])].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    const recent = sorted.slice(0, limit);
-    
-    return { 
-      success: true, 
-      orders: recent,
-      count: recent.length 
-    };
   });
 
   // This component doesn't render anything, it just registers actions

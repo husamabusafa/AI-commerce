@@ -63,27 +63,25 @@ function AppContent() {
   };
 
   const isAuthPage = location.pathname.startsWith('/login') || location.pathname.startsWith('/register');
-
-  // Admin pages wrapper with AI agent
-  const AdminPageWrapper = ({ children }: { children: React.ReactElement }) => {
-    return (
-      <>
-        {/* <AdminAgentActions /> */}
-        <HsafaChat
-          agentId="cmfx4jbf900e9qgl98wregwim"
-          theme={themeState.theme as 'light' | 'dark'}
-          language={languageState.currentLanguage === 'ar' ? 'ar' : 'en'}
-          dir={languageState.isRTL ? 'rtl' : 'ltr'}
-          defaultOpen={false}
-          alwaysOpen={false}
-        />
-        {children}
-      </>
-    );
-  };
+  const isAdminPage = location.pathname.startsWith('/admin');
 
   return (
     <div className="min-h-screen app-bg animate-fadeIn">
+      {/* AI Agent Actions - Only mounted once for admin pages */}
+      {isAdminPage && state.currentUser?.role === 'ADMIN' && (
+        <>
+          <AdminAgentActions />
+          <HsafaChat
+            agentId="cmgc542tk0006qg104qx65ccj"
+            theme={themeState.theme as 'light' | 'dark'}
+            language={languageState.currentLanguage === 'ar' ? 'ar' : 'en'}
+            dir={languageState.isRTL ? 'rtl' : 'ltr'}
+            defaultOpen={false}
+            alwaysOpen={false}
+          />
+        </>
+      )}
+
       {/* Fixed sidebar - hidden on mobile (not on auth routes) */}
       {!isAuthPage && (
         <div className="hidden lg:block">
@@ -148,9 +146,7 @@ function AppContent() {
                 path="/admin"
                 element={
                   <AdminRoute>
-                    <AdminPageWrapper>
-                      <Dashboard />
-                    </AdminPageWrapper>
+                    <Dashboard />
                   </AdminRoute>
                 }
               />
@@ -158,9 +154,7 @@ function AppContent() {
                 path="/admin/products"
                 element={
                   <AdminRoute>
-                    <AdminPageWrapper>
-                      <Products />
-                    </AdminPageWrapper>
+                    <Products />
                   </AdminRoute>
                 }
               />
@@ -168,9 +162,7 @@ function AppContent() {
                 path="/admin/products/add"
                 element={
                   <AdminRoute>
-                    <AdminPageWrapper>
-                      <AddProduct />
-                    </AdminPageWrapper>
+                    <AddProduct />
                   </AdminRoute>
                 }
               />
@@ -178,9 +170,7 @@ function AppContent() {
                 path="/admin/products/:id/edit"
                 element={
                   <AdminRoute>
-                    <AdminPageWrapper>
-                      <EditProduct />
-                    </AdminPageWrapper>
+                    <EditProduct />
                   </AdminRoute>
                 }
               />
@@ -188,9 +178,7 @@ function AppContent() {
                 path="/admin/categories"
                 element={
                   <AdminRoute>
-                    <AdminPageWrapper>
-                      <Categories />
-                    </AdminPageWrapper>
+                    <Categories />
                   </AdminRoute>
                 }
               />
@@ -198,9 +186,7 @@ function AppContent() {
                 path="/admin/categories/add"
                 element={
                   <AdminRoute>
-                    <AdminPageWrapper>
-                      <AddCategory />
-                    </AdminPageWrapper>
+                    <AddCategory />
                   </AdminRoute>
                 }
               />
@@ -208,9 +194,7 @@ function AppContent() {
                 path="/admin/orders"
                 element={
                   <AdminRoute>
-                    <AdminPageWrapper>
-                      <Orders />
-                    </AdminPageWrapper>
+                    <Orders />
                   </AdminRoute>
                 }
               />
