@@ -18,7 +18,6 @@ import Orders from './components/admin/Orders';
 import Categories from './components/admin/Categories';
 import AddCategory from './components/admin/AddCategory';
 import Profile from './components/admin/Profile';
-import AdminAgentActions from './components/admin/AdminAgentActions';
 
 // Client Components
 import Shop from './components/client/Shop';
@@ -70,9 +69,8 @@ function AppContent() {
       {/* AI Agent Actions - Only mounted once for admin pages */}
       {isAdminPage && state.currentUser?.role === 'ADMIN' && (
         <>
-          <AdminAgentActions />
           <HsafaChat
-            agentId="cmgc542tk0006qg104qx65ccj"
+            agentId="cmgir768a00fxqgqb1f8p10z3"
             theme={themeState.theme as 'light' | 'dark'}
             language={languageState.currentLanguage === 'ar' ? 'ar' : 'en'}
             dir={languageState.isRTL ? 'rtl' : 'ltr'}
@@ -245,7 +243,7 @@ function App() {
     <ThemeProvider>
       <LanguageProvider>
         <AppProvider>
-          <HsafaProvider baseUrl={import.meta.env.VITE_API_BASE_URL || 'http://localhost:3900'}>  
+          <HsafaProvider baseUrl={ 'http://localhost:3900'}>  
             <AppWrapper />
           </HsafaProvider>
         </AppProvider>
